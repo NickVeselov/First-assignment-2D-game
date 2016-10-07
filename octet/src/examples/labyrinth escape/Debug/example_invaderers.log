@@ -1,0 +1,15 @@
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (example_invaderers.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  main.cpp
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(291): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(293): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(295): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(296): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(297): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(298): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(304): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(312): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(312): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(313): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(313): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  example_invaderers.vcxproj -> D:\Game development\Study\Projects\First-assignment-2D-game\octet\src\examples\labyrinth escape\Debug\labyrinth_debug.exe
+  example_invaderers.vcxproj -> D:\Game development\Study\Projects\First-assignment-2D-game\octet\src\examples\labyrinth escape\Debug\labyrinth_debug.pdb (Full PDB)
