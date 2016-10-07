@@ -11,5 +11,13 @@ d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\l
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(312): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(313): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(313): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(346): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(375): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(376): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(405): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(408): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(411): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(414): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(420): warning C4715: 'octet::labyrinth_app::find_unvisited_cell': not all control paths return a value
   example_invaderers.vcxproj -> D:\Game development\Study\Projects\First-assignment-2D-game\octet\src\examples\labyrinth escape\Debug\labyrinth_debug.exe
   example_invaderers.vcxproj -> D:\Game development\Study\Projects\First-assignment-2D-game\octet\src\examples\labyrinth escape\Debug\labyrinth_debug.pdb (Full PDB)
