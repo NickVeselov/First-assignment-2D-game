@@ -27,7 +27,10 @@ namespace octet { namespace resources {
     typedef dictionary<GLuint> textures_t;
     typedef dictionary<int> sounds_t;
 
-    static textures_t &textures() { static textures_t instance;  return instance; }
+    static textures_t &textures() {
+		static textures_t instance;
+		return instance;
+	}
     static sounds_t &sounds() { static sounds_t instance;  return instance; }
 
     static GLuint get_texture_handle_internal(unsigned gl_kind, const char *name);
