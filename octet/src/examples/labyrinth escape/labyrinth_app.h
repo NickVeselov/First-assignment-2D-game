@@ -130,13 +130,18 @@ namespace octet {
 	};
 
 
-	class StackNode
+	struct StackNode
 	{
-	public:
 		int x;
 		int y;
 		StackNode* next;
-	};
+
+		StackNode(int X, int Y, StackNode *Next)
+		{
+			x = X; y = Y; next = Next;
+		}
+	}; 
+
 
 	class Stack
 	{
@@ -146,42 +151,29 @@ namespace octet {
 	public:
 		vec2 pop()
 		{
-			if (head == NULL)
+			if (head->next ==  NULL)
 				return (vec2(-1, -1));
 			else
 			{
 				StackNode *popped = head;
-				head = head->next;
-				int x = popped->x,
-					y = popped->y;
+				StackNode *nexthead = head->next;
 				delete popped;
+				head = nexthead;
 				count--;
-				return (vec2(x, y));
+				return (vec2(head->x, head->y));
 			}
 		}
 
 		void push(int x, int y)
 		{
-			StackNode *pushed = new StackNode;
-			pushed->next = head;
-			pushed->x = x;
-			pushed->y = y;
+			StackNode *pushed = new StackNode(x, y, head);
 			head = pushed;
 			count++;
 		}
 
 		Stack(int x, int y)
 		{
-			head = new StackNode;
-			head->x = x;
-			head->y = y;
-			head->next = NULL;
-		}
-
-		Stack()
-		{
-			head = NULL;
-			count = 0;
+			head = new StackNode(x, y, NULL);
 		}
 
 		bool isEmpty()
@@ -190,6 +182,20 @@ namespace octet {
 				return true;
 			else
 				return false;
+		}
+
+		//ToDO: delete this function (test only)
+		void showElements()
+		{
+			StackNode *current = head;
+			std::cout << "Stack = ";
+			while (current->next != NULL)
+			{
+				std::cout <<"[" << current->x << ", " << current->y << "] - ";
+				current = current->next;
+			}
+			std::cout<<std::endl;
+			
 		}
 	};
 
@@ -304,7 +310,7 @@ namespace octet {
 		bool visited[map_size][map_size];
 		int current_sprite;
 		float net_width;
-		Stack labyrinth_stack;
+		Stack *labyrinth_stack;
 	public:
 
 		// this is called when we construct the class
@@ -350,7 +356,7 @@ namespace octet {
 				x1 = map_size - alignment_right,
 				y0 = -map_size + alignment_top,
 				y1 = map_size - alignment_bottom;
-			step = 8;
+			step = 4;
 
 			float space_width = 2.f,
 				space_height = 2.f;
@@ -391,11 +397,11 @@ namespace octet {
 					visited[i][j] = false;
 
 			vec2 current_cell(start_index, 0);
-			Stack stack(start_index, 0);
+			labyrinth_stack = new Stack(start_index, 0);
 			visited[start_index][0] = true;
 			bool complete = false;
 			GLuint black = resource_dict::get_texture_handle(GL_RGB, "#000000");
-			GLuint white = resource_dict::get_texture_handle(GL_RGB, "#FF0000");
+			GLuint white = resource_dict::get_texture_handle(GL_RGB, "#000000");
 			int x0 = -map_size + alignment_left,
 				x1 = map_size - alignment_right,
 				y0 = -map_size + alignment_top,
@@ -405,11 +411,14 @@ namespace octet {
 			{
 				vec2 next_cell = find_unvisited_cell((int)current_cell.x(), (int)current_cell.y());
 				if (next_cell.x() == -1)
+				{
 					complete = true;
+					printf("Stack is empty.\n");
+				}
 				else
 				{
 					int x = next_cell.x(), y = next_cell.y();
-					stack.push(x, y);
+					labyrinth_stack->push(x, y);
 					visited[x][y] = true;
 
 					//remove wall
@@ -423,8 +432,11 @@ namespace octet {
 					else
 						sprites[current_sprite++].init(white, x0 + step*next_cell.x(), y0 + current_cell.y()*step + step / 2, net_width, step - net_width);
 
-
+					
 					current_cell = next_cell;
+					it++;
+
+					labyrinth_stack->showElements();
 				}
 			}
 		}
@@ -473,10 +485,11 @@ namespace octet {
 			//no unvisited neighbours
 			else
 			{
-				vec2 previous = labyrinth_stack.pop();
+				vec2 previous = labyrinth_stack->pop();
+				labyrinth_stack->showElements();
 				if (previous.x() == -1)
 					return previous;
-				find_unvisited_cell((int)previous.x(), (int)previous.y());				
+				return(find_unvisited_cell((int)previous.x(), (int)previous.y()));
 			}
 		}
 		
