@@ -1,21 +1,32 @@
 ﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (example_invaderers.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   main.cpp
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(163): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(364): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(366): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(368): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(369): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(370): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(371): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(377): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(385): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(385): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(399): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(420): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(470): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(474): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(478): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(482): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(494): warning C4715: 'octet::labyrinth_app::find_unvisited_cell': not all control paths return a value
-  example_invaderers.vcxproj -> D:\Game development\Study\Projects\First-assignment-2D-game\octet\src\examples\labyrinth escape\Debug\labyrinth_debug.exe
-  example_invaderers.vcxproj -> D:\Game development\Study\Projects\First-assignment-2D-game\octet\src\examples\labyrinth escape\Debug\labyrinth_debug.pdb (Full PDB)
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(259): error C2061: syntax error: identifier 'sprite'
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(301): error C2061: syntax error: identifier 'sprite'
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(54): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(66): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(72): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(139): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(140): warning C4316: 'octet::Labyrinth::Stack': object allocated on the heap may not be aligned 16
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(157): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(219): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(222): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(225): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(228): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(275): error C2065: 'sprites': undeclared identifier
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(275): error C2228: left of '.init' must have class/struct/union
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(277): error C2065: 'sprites': undeclared identifier
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(277): error C2228: left of '.init' must have class/struct/union
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(279): error C2065: 'sprites': undeclared identifier
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(279): error C2228: left of '.init' must have class/struct/union
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(280): error C2065: 'sprites': undeclared identifier
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(280): error C2228: left of '.init' must have class/struct/union
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(281): error C2065: 'sprites': undeclared identifier
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(281): error C2228: left of '.init' must have class/struct/union
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(282): error C2065: 'sprites': undeclared identifier
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(282): error C2228: left of '.init' must have class/struct/union
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(285): error C2065: 'sprites': undeclared identifier
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(285): error C2228: left of '.init' must have class/struct/union
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(304): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(308): error C2065: 'sprites': undeclared identifier
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(309): error C2059: syntax error: ']'
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(262): error C2660: 'octet::Labyrinth::Draw': function does not take 2 arguments

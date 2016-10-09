@@ -430,6 +430,9 @@
     <ClInclude Include="labyrinth_app.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="labyrinth.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\resources\mesh_builder.inl">

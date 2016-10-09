@@ -1,5 +1,4 @@
-#include <cstdlib>
-#include <ctime>
+#include "labyrinth.h"
 
 #pragma once
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,82 +128,10 @@ namespace octet {
 		}
 	};
 
-
-	struct StackNode
-	{
-		int x;
-		int y;
-		StackNode* next;
-
-		StackNode(int X, int Y, StackNode *Next)
-		{
-			x = X; y = Y; next = Next;
-		}
-	}; 
-
-
-	class Stack
-	{
-	private:
-		StackNode *head;
-		int count = 1;
-	public:
-		vec2 pop()
-		{
-			if (head->next ==  NULL)
-				return (vec2(-1, -1));
-			else
-			{
-				StackNode *popped = head;
-				StackNode *nexthead = head->next;
-				delete popped;
-				head = nexthead;
-				count--;
-				return (vec2(head->x, head->y));
-			}
-		}
-
-		void push(int x, int y)
-		{
-			StackNode *pushed = new StackNode(x, y, head);
-			head = pushed;
-			count++;
-		}
-
-		Stack(int x, int y)
-		{
-			head = new StackNode(x, y, NULL);
-		}
-
-		bool isEmpty()
-		{
-			if (head == NULL)
-				return true;
-			else
-				return false;
-		}
-
-		//ToDO: delete this function (test only)
-		void showElements()
-		{
-			StackNode *current = head;
-			std::cout << "Stack = ";
-			while (current->next != NULL)
-			{
-				std::cout <<"[" << current->x << ", " << current->y << "] - ";
-				current = current->next;
-			}
-			std::cout<<std::endl;
-			
-		}
-	};
-
-
 	class labyrinth_app : public octet::app {
 		// Matrix to transform points in our camera space to the world.
 		// This lets us move our camera
 		mat4t cameraToWorld;
-
 		// shader to draw a textured triangle
 		texture_shader texture_shader_;
 
@@ -213,9 +140,9 @@ namespace octet {
 			num_borders = 4,
 
 			//labyrinth parameters
-			map_size = 30,
+			map_size = 40,
 			num_walls = 500,
-			alignment_top = 2,
+			alignment_top = 4,
 			alignment_bottom = alignment_top,
 			alignment_left = alignment_top,
 			alignment_right = alignment_top,
@@ -303,14 +230,6 @@ namespace octet {
 			glDrawElements(GL_TRIANGLES, num_quads * 6, GL_UNSIGNED_INT, indices);
 		}
 
-
-		//labyrinth generator
-		int cells_number;
-		int step;
-		bool visited[map_size][map_size];
-		int current_sprite;
-		float net_width;
-		Stack *labyrinth_stack;
 	public:
 
 		// this is called when we construct the class
@@ -339,170 +258,13 @@ namespace octet {
 
 		void draw_map()
 		{
-			current_sprite = first_border_sprite;
+			Labyrinth *lab = new Labyrinth();
+			lab->Draw(first_border_sprite, sprites);
 
-			float border_width = 1.0f,
-				wall_width = 0.5f;
+			//staircase
+			//vec2 most_distant_cell = labyrinth_stack->distant_cell;
+			//sprites[current_sprite++].init(gray, x0 + step*most_distant_cell.x() + step/2 + net_width, y0 + step*most_distant_cell.y() + step/2 + net_width, step, step);
 
-			GLuint white = resource_dict::get_texture_handle(GL_RGB, "#ffffff");
-			GLuint black = resource_dict::get_texture_handle(GL_RGB, "#000000");
-			GLuint gray = resource_dict::get_texture_handle(GL_RGB, "#808080");
-
-			#pragma region Draw Borders
-
-			net_width = 0.35f;
-
-			int x0 = -map_size + alignment_left,
-				x1 = map_size - alignment_right,
-				y0 = -map_size + alignment_top,
-				y1 = map_size - alignment_bottom;
-			step = 4;
-
-			float space_width = 2.f,
-				space_height = 2.f;
-			for (int i = x0; i <= x1; i += step)
-				sprites[current_sprite++].init(gray, 0,	i,	y1 - y0 + net_width, net_width);
-			for (int i = y0; i <= y1; i += step)
-				sprites[current_sprite++].init(gray, i, 0, net_width, x1 - x0 + net_width);
-
-			sprites[current_sprite++].init(white, y0, 0, net_width, x1 - x0 + net_width);
-			sprites[current_sprite++].init(white, y1, 0, net_width, x1 - x0 + net_width);
-			sprites[current_sprite++].init(white, 0, x0, x1 - x0 + net_width, net_width);
-			sprites[current_sprite++].init(white, 0, x1, x1 - x0 + net_width, net_width);
-
-			#pragma endregion
-
-			cells_number = (x1 - x0) / step;
-
-			srand(time(NULL));
-
-			int entrance_index = rand() % cells_number,
-				exit_index = rand() % cells_number;
-			#pragma region Draw Labyrinth
-
-			//entrance
-
-			sprites[current_sprite++].init(black, x0 + entrance_index*step + step/2., y0, step - net_width, net_width);
-
-			#pragma endregion
-
-			draw_labyrinth(entrance_index);
-		}
-
-		//Recursive backtracker algorithm: https://en.wikipedia.org/wiki/Maze_generation_algorithm
-		void draw_labyrinth(int start_index)
-		{
-			for (int i = 0; i < cells_number; i++)
-				for (int j = 0; j < cells_number; j++)
-					visited[i][j] = false;
-
-			vec2 current_cell(start_index, 0);
-			labyrinth_stack = new Stack(start_index, 0);
-			visited[start_index][0] = true;
-			bool complete = false;
-			GLuint black = resource_dict::get_texture_handle(GL_RGB, "#000000");
-			GLuint white = resource_dict::get_texture_handle(GL_RGB, "#000000");
-			int x0 = -map_size + alignment_left,
-				x1 = map_size - alignment_right,
-				y0 = -map_size + alignment_top,
-				y1 = map_size - alignment_bottom;
-			int it = 0;
-			while (!complete)
-			{
-				vec2 next_cell = find_unvisited_cell((int)current_cell.x(), (int)current_cell.y());
-				if (next_cell.x() == -1)
-				{
-					complete = true;
-					printf("Stack is empty.\n");
-				}
-				else
-				{
-					int x = next_cell.x(), y = next_cell.y();
-					labyrinth_stack->push(x, y);
-					visited[x][y] = true;
-
-					//remove wall
-					if (current_cell.x() == next_cell.x())
-						if (current_cell.y() > next_cell.y())
-							sprites[current_sprite++].init(white, x0 + current_cell.x()*step + step / 2, y0 + (next_cell.y() + 1)*step, step - net_width, net_width);
-						else
-							sprites[current_sprite++].init(white, x0 + current_cell.x()*step + step / 2, y0 + (current_cell.y() + 1)*step, step - net_width, net_width);
-					else if (current_cell.x() > next_cell.x())
-						sprites[current_sprite++].init(white, x0 + step * current_cell.x(), y0 + current_cell.y()*step + step / 2, net_width, step - net_width);
-					else
-						sprites[current_sprite++].init(white, x0 + step*next_cell.x(), y0 + current_cell.y()*step + step / 2, net_width, step - net_width);
-
-					
-					current_cell = next_cell;
-					it++;
-
-					labyrinth_stack->showElements();
-				}
-			}
-		}
-
-		vec2 find_unvisited_cell(int cur_x, int cur_y)
-		{
-			int dir[4] = { -1, -1, -1, -1 };
-			int cur = 0;
-
-			//check directions for emptiness
-			if (check_cell(cur_x - 1, cur_y))
-				dir[cur++] = 1;
-			if (check_cell(cur_x, cur_y + 1))
-				dir[cur++] = 2;
-			if (check_cell(cur_x + 1, cur_y))
-				dir[cur++] = 3;
-			if (check_cell(cur_x, cur_y - 1))
-				dir[cur++] = 4;
-
-			//if some unvisited neighbour exists
-			if (cur > 0)
-			{
-				int random_direction = dir[rand() % cur];
-				if (random_direction == -1)
-					int a = 5;
-				switch (random_direction)
-				{
-					//left
-				case 1:
-					printf_s("left\n");
-					return (vec2(cur_x - 1, cur_y));
-					//top
-				case 2:
-					printf_s("top\n");
-					return (vec2(cur_x, cur_y + 1));
-					//right
-				case 3:
-					printf_s("right\n");
-					return (vec2(cur_x + 1, cur_y));
-					//bottom
-				case 4:
-					printf_s("bottom\n");
-					return (vec2(cur_x, cur_y - 1));
-				}
-			}
-			//no unvisited neighbours
-			else
-			{
-				vec2 previous = labyrinth_stack->pop();
-				labyrinth_stack->showElements();
-				if (previous.x() == -1)
-					return previous;
-				return(find_unvisited_cell((int)previous.x(), (int)previous.y()));
-			}
-		}
-		
-		bool check_cell(int x, int y)
-		{
-			if ((x >= 0) && (x < cells_number)	&& (y >= 0) && (y < cells_number))
-			{
-				if (visited[x][y])
-					return false;
-				else
-					return true;
-			}
-			return false;
 		}
 
 		// this is called to draw the world
