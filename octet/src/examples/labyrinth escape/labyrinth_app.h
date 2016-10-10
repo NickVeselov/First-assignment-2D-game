@@ -305,7 +305,7 @@ namespace octet {
 			draw_map();
 			// sundry counters and game state.
 
-			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/GameOver.gif");
+			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/game over.gif");
 			game_over_sprite = current_sprite;
 			sprites[current_sprite++].init(GameOver, 0, 2*lab.map_size, 2*lab.map_size - lab.alignment_left - lab.alignment_right, 2*lab.map_size - lab.alignment_top - lab.alignment_bottom);
 
@@ -330,7 +330,7 @@ namespace octet {
 			float net_width = 0.35f;
 
 			player_sprite = current_sprite;
-			GLuint player_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/ship.gif");
+			GLuint player_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/character.gif");
 			sprites[current_sprite++].init(player_texture, x0 + lab.entrance_index*step + step / 2., y0 + step / 2., step - 2 * net_width, step - 2 * net_width);
 
 			player.x = lab.entrance_index;
@@ -344,7 +344,7 @@ namespace octet {
 			GLuint wall = resource_dict::get_texture_handle(GL_RGB, "#ffffff");
 			GLuint empty = resource_dict::get_texture_handle(GL_RGB, "#000000");
 			GLuint gray = resource_dict::get_texture_handle(GL_RGB, "#111111");
-			GLuint exit = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/invaderer.gif");
+			GLuint exit = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/staircase 2.gif");
 
 			gray = wall;
 
