@@ -128,6 +128,14 @@ namespace octet {
 		}
 	};
 
+	struct Player
+	{
+	public:
+		int x;
+		int y;
+
+	};
+
 	class labyrinth_app : public octet::app {
 		// Matrix to transform points in our camera space to the world.
 		// This lets us move our camera
@@ -136,6 +144,7 @@ namespace octet {
 		texture_shader texture_shader_;
 
 		Labyrinth lab;
+		Player player;
 
 		enum {
 			num_sound_sources = 8,
@@ -230,38 +239,51 @@ namespace octet {
 		//dynamic behaviour
 
 		// use the keyboard to move the player
-		void move_ship() {
-			const float ship_speed = 0.05f;
+		void move_player() {
+			const float ship_speed = lab.step;
 			// left and right arrows
 			if (is_key_down(key_left)) {
-				sprites[player_sprite].translate(-ship_speed, 0);
-				//if (sprites[player_sprite].collides_with(sprites[first_border_sprite + 2])) {
-				//	sprites[player_sprite].translate(+ship_speed, 0);
-				//}
+				if ((!lab.cells[player.y][player.x].left_wall)&&(player.x > 0))
+				{
+					sprites[player_sprite].translate(-ship_speed, 0);
+					player.x--;
+				}
 			}
-			else if (is_key_down(key_right)) {
-				sprites[player_sprite].translate(+ship_speed, 0);
-				//if (sprites[player_sprite].collides_with(sprites[first_border_sprite + 3])) {
-				//	sprites[player_sprite].translate(-ship_speed, 0);
-				//}
+			else if ((is_key_down(key_right)) && (player.x < lab.cells_number)) {
+				if (!lab.cells[player.y][player.x].right_wall)
+				{
+					sprites[player_sprite].translate(+ship_speed, 0);
+					player.x++;
+				}
 			}
-			else if (is_key_down(key_up)) {
-				sprites[player_sprite].translate(0, +ship_speed);
-				//if (sprites[player_sprite].collides_with(sprites[first_border_sprite + 3])) {
-				//	sprites[player_sprite].translate(-ship_speed, 0);
-				//}
+			else if ((is_key_down(key_up)) && (player.y < lab.cells_number)) {
+				if (!lab.cells[player.y][player.x].top_wall)
+				{
+					sprites[player_sprite].translate(0, +ship_speed);
+					player.y++;
+				}
 			}
-			else if (is_key_down(key_down)) {
-				sprites[player_sprite].translate(0, -ship_speed);
-				//if (sprites[player_sprite].collides_with(sprites[first_border_sprite + 3])) {
-				//	sprites[player_sprite].translate(-ship_speed, 0);
-				//}
+			else if ((is_key_down(key_down)) && (player.y > 0)) {
+				if (!lab.cells[player.y][player.x].bottom_wall)
+				{
+					sprites[player_sprite].translate(0, -ship_speed);
+					player.y--;
+				}
+			}
+
+			if ((player.x == (int)lab.exit.x()) && (player.y == (int)lab.exit.y()))
+			{
+				game_over = true;
+				sprites[player_sprite].is_enabled() = false;
+				sprites[player_sprite].translate(-2*lab.map_size, 0);
+				sprites[game_over_sprite].translate(0, - 2*lab.map_size);
 			}
 		}
 
-
 		int current_sprite;
 		int player_sprite;
+		int game_over_sprite;
+
 	public:
 
 		// this is called when we construct the class
@@ -283,6 +305,11 @@ namespace octet {
 			draw_map();
 			// sundry counters and game state.
 
+			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/GameOver.gif");
+			game_over_sprite = current_sprite;
+			sprites[current_sprite++].init(GameOver, 0, 2*lab.map_size, 2*lab.map_size - lab.alignment_left - lab.alignment_right, 2*lab.map_size - lab.alignment_top - lab.alignment_bottom);
+
+
 			num_lives = 5;
 			game_over = false;
 			score = 0;
@@ -300,12 +327,14 @@ namespace octet {
 				y1 = lab.map_size - lab.alignment_bottom,
 				step = lab.step;
 
-			float	net_width = 0.35f;
+			float net_width = 0.35f;
 
 			player_sprite = current_sprite;
-			GLuint player = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/ship.gif");
-			sprites[current_sprite++].init(player, x0 + lab.entrance_index*step + step / 2., y0 + step / 2., step - 2 * net_width, step - 2 * net_width);
+			GLuint player_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/ship.gif");
+			sprites[current_sprite++].init(player_texture, x0 + lab.entrance_index*step + step / 2., y0 + step / 2., step - 2 * net_width, step - 2 * net_width);
 
+			player.x = lab.entrance_index;
+			player.y = 0;
 		}
 
 		void draw_walls()
@@ -316,8 +345,6 @@ namespace octet {
 			GLuint empty = resource_dict::get_texture_handle(GL_RGB, "#000000");
 			GLuint gray = resource_dict::get_texture_handle(GL_RGB, "#111111");
 			GLuint exit = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/invaderer.gif");
-
-
 
 			gray = wall;
 
@@ -365,7 +392,7 @@ namespace octet {
 
 		// this is called to draw the world
 		void draw_world(int x, int y, int w, int h) {
-
+			simulate();
 			// set a viewport - includes whole window area
 			glViewport(x, y, w, h);
 
@@ -395,13 +422,12 @@ namespace octet {
 		}
 
 
-		void simulate() {
+		void simulate() {	
+
 			if (game_over) {
 				return;
 			}
-
-			move_ship();
-
+			move_player();
 		}
 	};
 }

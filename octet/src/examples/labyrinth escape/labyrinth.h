@@ -108,10 +108,10 @@ public:
 			alignment_left = alignment_top,
 			alignment_right = alignment_top,
 
-			lab_size = 120,
+			lab_size = 100,
 			map_size = lab_size/2 + alignment_left,
 
-			step = 8,
+			step = 20,
 
 			cells_number = 2*(map_size - alignment_top) / step,
 		};
