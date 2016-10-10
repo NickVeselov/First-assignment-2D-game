@@ -111,7 +111,7 @@ public:
 			lab_size = 100,
 			map_size = lab_size/2 + alignment_left,
 
-			step = 20,
+			step = 10,
 
 			cells_number = 2*(map_size - alignment_top) / step,
 		};
