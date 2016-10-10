@@ -135,17 +135,14 @@ namespace octet {
 		// shader to draw a textured triangle
 		texture_shader texture_shader_;
 
+		Labyrinth lab;
+
 		enum {
 			num_sound_sources = 8,
 			num_borders = 4,
 
 			//labyrinth parameters
-			map_size = 40,
 			num_walls = 500,
-			alignment_top = 4,
-			alignment_bottom = alignment_top,
-			alignment_left = alignment_top,
-			alignment_right = alignment_top,
 
 			border_width = 1,
 			
@@ -230,6 +227,7 @@ namespace octet {
 			glDrawElements(GL_TRIANGLES, num_quads * 6, GL_UNSIGNED_INT, indices);
 		}
 
+		int current_sprite;
 	public:
 
 		// this is called when we construct the class
@@ -243,7 +241,7 @@ namespace octet {
 
 			// set up the matrices with a camera 5 units from the origin
 			cameraToWorld.loadIdentity();
-			cameraToWorld.translate(0, 0, map_size);
+			cameraToWorld.translate(0, 0, lab.map_size);
 
 			//font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
 
@@ -257,14 +255,67 @@ namespace octet {
 		}
 
 		void draw_map()
-		{
-			Labyrinth *lab = new Labyrinth();
-			lab->Draw(first_border_sprite, sprites);
-
+		{			
+			current_sprite = 0;
+			lab.construct_labyrinth();
+			draw_walls();
 			//staircase
 			//vec2 most_distant_cell = labyrinth_stack->distant_cell;
 			//sprites[current_sprite++].init(gray, x0 + step*most_distant_cell.x() + step/2 + net_width, y0 + step*most_distant_cell.y() + step/2 + net_width, step, step);
+		}
 
+		void draw_walls()
+		{
+			Cell **walls = lab.cells;
+
+			GLuint wall = resource_dict::get_texture_handle(GL_RGB, "#ffffff");
+			GLuint empty = resource_dict::get_texture_handle(GL_RGB, "#000000");
+			GLuint gray = resource_dict::get_texture_handle(GL_RGB, "#111111");
+			GLuint exit = resource_dict::get_texture_handle(GL_RGB, "#FF0000");
+
+
+			gray = wall;
+
+			int x0 = -lab.map_size + lab.alignment_left,
+				x1 = lab.map_size - lab.alignment_right,
+				y0 = -lab.map_size + lab.alignment_top,
+				y1 = lab.map_size - lab.alignment_bottom,
+				step = lab.step;
+
+			float border_width = 1.0f,
+				wall_width = 0.5f,
+				net_width = 0.35f;
+
+			//outer walls
+			sprites[current_sprite++].init(wall, 0, y0, x1 - x0 + wall_width, wall_width);
+			sprites[current_sprite++].init(wall, 0, y1, x1 - x0 + wall_width, wall_width);
+			sprites[current_sprite++].init(wall, x0, 0, wall_width, y1 - y0 + wall_width);
+			sprites[current_sprite++].init(wall, x1, 0, wall_width, y1 - y0 + wall_width);
+
+			//entrance
+				sprites[current_sprite++].init(empty, x0 + lab.entrance_index*step + step / 2., y0 , step - net_width, border_width);
+
+			//inner walls
+
+			for (int i = 0; i<lab.cells_number; i++)
+				for (int j = 0; j < lab.cells_number; j++)
+				{
+					if (walls[i][j].left_wall)
+						sprites[current_sprite++].init(gray, x0 + j*step, y0 + i*step + step / 2., net_width, step + net_width);
+
+					if (walls[i][j].top_wall)
+						sprites[current_sprite++].init(gray, x0 + j*step + step / 2., y0 + (i + 1)*step, step + net_width, net_width);
+
+					if (walls[i][j].right_wall)
+						sprites[current_sprite++].init(gray, x0 + (j + 1)*step, y0 + i*step + step / 2., net_width, step + net_width);
+
+					if (walls[i][j].bottom_wall)
+						sprites[current_sprite++].init(gray, x0 + j*step + step / 2., y0 + i*step, step + net_width, net_width);
+				}
+
+			//exit
+
+			sprites[current_sprite++].init(exit, x0 + lab.exit.x()*step + step / 2., y0 + lab.exit.y()*step + step / 2., step - 2*net_width, step - 2*net_width);
 		}
 
 		// this is called to draw the world
@@ -296,6 +347,11 @@ namespace octet {
 			// move the listener with the camera
 			vec4 &cpos = cameraToWorld.w();
 			alListener3f(AL_POSITION, cpos.x(), cpos.y(), cpos.z());
+		}
+
+		void draw_sprite(int _texture, float x, float y, float w, float h)
+		{
+			sprites[current_sprite++].init(_texture, x, y, w, h);
 		}
 	};
 }

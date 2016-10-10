@@ -99,36 +99,33 @@ namespace octet {
 
 			}
 		};
-		
-		int entrance_index;
-
+public:
 		enum {
 
 			//labyrinth parameters
-			map_size = 40,
-			alignment_top = 4,
+			alignment_top = 2,
 			alignment_bottom = alignment_top,
 			alignment_left = alignment_top,
 			alignment_right = alignment_top,
 
-			border_width = 1,
+			lab_size = 120,
+			map_size = lab_size/2 + alignment_left,
 
-			step = 9,
+			step = 8,
 
-			cells_number = (map_size - 2 * alignment_top) / step,
+			cells_number = 2*(map_size - alignment_top) / step,
 		};
+		int entrance_index;
+		vec2 exit;
 
-
-
-		//labyrinth generator
-
+		Cell **cells;
+private:
 		bool visited[cells_number][cells_number];
-		Cell cells[cells_number][cells_number];
 		Stack *labyrinth_stack;
 
 
 		//Recursive backtracker algorithm: https://en.wikipedia.org/wiki/Maze_generation_algorithm
-		void draw_labyrinth(int start_index)
+		void construct_walls()
 		{
 			//matrix with elements, which indicates whether the cell was visited by algorithm
 			for (int i = 0; i < cells_number; i++)
@@ -136,20 +133,19 @@ namespace octet {
 					visited[i][j] = false;
 
 
-			vec2 current_cell(start_index, 0);
-			labyrinth_stack = new Stack(start_index, 0);
-			visited[start_index][0] = true;
+			vec2 current_cell(entrance_index, 0);
+			labyrinth_stack = new Stack(entrance_index, 0);
+			visited[entrance_index][0] = true;
 			bool complete = false;
-
 			int it = 0;
+
+			cells[0][entrance_index].bottom_wall = false;
+
 			while (!complete)
 			{
 				vec2 next_cell = find_unvisited_cell((int)current_cell.x(), (int)current_cell.y());
 				if (next_cell.x() == -1)
-				{
 					complete = true;
-					printf("Stack is empty.\n");
-				}
 				else
 				{
 					current_cell = labyrinth_stack->get_head();
@@ -162,33 +158,33 @@ namespace octet {
 					//remove wall
 					if (current_cell.x() == next_cell.x())
 						if (current_cell.y() > next_cell.y())
+						{
+							//remove bottom wall
 							cells[(int)current_cell.y()][(int)current_cell.x()].bottom_wall = false;
+							cells[(int)next_cell.y()][(int)current_cell.x()].top_wall = false;
+						}
 						else
+						{
+							//remove top wall
 							cells[(int)current_cell.y()][(int)current_cell.x()].top_wall = false;
+							cells[(int)next_cell.y()][(int)current_cell.x()].bottom_wall = false;
+						}
 					else if (current_cell.x() > next_cell.x())
+					{
+						//remove left wall
 						cells[(int)current_cell.y()][(int)current_cell.x()].left_wall = false;
+						cells[(int)current_cell.y()][(int)next_cell.x()].right_wall = false;
+					}
 					else
+					{
+						//remove right wall
 						cells[(int)current_cell.y()][(int)current_cell.x()].right_wall = false;
-
-					//		sprites[current_sprite++].init(white, x0 + current_cell.x()*step + step / 2, y0 + current_cell.y()*step, step - net_width, net_width);
-					//	else
-					//		sprites[current_sprite++].init(white, x0 + current_cell.x()*step + step / 2, y0 + next_cell.y()*step, step - net_width, net_width);
-					//else if (current_cell.x() > next_cell.x())
-					//	sprites[current_sprite++].init(white, x0 + step * current_cell.x(), y0 + current_cell.y()*step + step / 2, net_width, step - net_width);
-					//else
-					//	sprites[current_sprite++].init(white, x0 + step*next_cell.x(), y0 + current_cell.y()*step + step / 2, net_width, step - net_width);
-
-					//std::cout << "###################### Wall [" << current_cell.x() << ", " << current_cell.y() << "] -> [" << next_cell.x() << ", " << next_cell.y() << "] removed. ######################" << std::endl;
-
-					it++;
-					//if (it == 1)
-					//	complete = true;
-
-					labyrinth_stack->showElements();
-
+						cells[(int)current_cell.y()][(int)next_cell.x()].left_wall = false;
+					}
 					current_cell = next_cell;
 				}
 			}
+			exit = labyrinth_stack->distant_cell;
 		}
 
 		vec2 find_unvisited_cell(int cur_x, int cur_y)
@@ -232,7 +228,6 @@ namespace octet {
 			else
 			{
 				vec2 previous = labyrinth_stack->pop();
-				labyrinth_stack->showElements();
 				if (previous.x() == -1)
 					return previous;
 				return(find_unvisited_cell((int)previous.x(), (int)previous.y()));
@@ -251,64 +246,30 @@ namespace octet {
 			return false;
 		}
 
-		void calculate_walls()
-		{
-
-		}
-
-		void place_textures(int current_sprite, sprite sprites[], int step)
-		{
-			GLuint white = resource_dict::get_texture_handle(GL_RGB, "#ffffff");
-			GLuint black = resource_dict::get_texture_handle(GL_RGB, "#000000");
-			GLuint gray = resource_dict::get_texture_handle(GL_RGB, "#808080");
-
-			int x0 = -map_size + alignment_left,
-				x1 = map_size - alignment_right,
-				y0 = -map_size + alignment_top,
-				y1 = map_size - alignment_bottom;
-
-			float border_width = 1.0f,
-				wall_width = 0.5f,
-				net_width = 0.35f;
-
-			for (int i = x0; i <= x1; i += step)
-				sprites[current_sprite++].init(gray, 0, i, y1 - y0 + net_width, net_width);
-			for (int i = y0; i <= y1; i += step)
-				sprites[current_sprite++].init(gray, i, 0, net_width, x1 - x0 + net_width);
-
-			sprites[current_sprite++].init(white, y0, 0, net_width, x1 - x0 + net_width);
-			sprites[current_sprite++].init(white, y1, 0, net_width, x1 - x0 + net_width);
-			sprites[current_sprite++].init(white, 0, x0, x1 - x0 + net_width, net_width);
-			sprites[current_sprite++].init(white, 0, x1, x1 - x0 + net_width, net_width);
-
-
-			sprites[current_sprite++].init(black, x0 + entrance_index*step + step / 2., y0, step - net_width, net_width);
-
-		}
-
 	public:
 
 		Labyrinth()
 		{
+			cells = new Cell*[cells_number];
+			
 			for (int i = 0; i < cells_number; i++)
+			{
+				cells[i] = new Cell[cells_number];
 				for (int j = 0; j < cells_number; j++)
 				{
 					cells[i][j].x = j;
 					cells[i][j].y = i;
 				}
+			}
 		}
 
-		Cell Draw(int current_sprite_index, sprite sprites[])
+		void construct_labyrinth()
 		{
-			//randomize entrance
 			srand(time(NULL));
 			entrance_index = rand() % cells_number;
-
-			calculate_walls();
-			place_textures(current_sprite_index, sprites, 9);
-			return cells[][];
+			
+			construct_walls();
 		}
-
 	};
 
 }
