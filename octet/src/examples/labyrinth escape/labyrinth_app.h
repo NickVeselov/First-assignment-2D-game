@@ -227,7 +227,41 @@ namespace octet {
 			glDrawElements(GL_TRIANGLES, num_quads * 6, GL_UNSIGNED_INT, indices);
 		}
 
+		//dynamic behaviour
+
+		// use the keyboard to move the player
+		void move_ship() {
+			const float ship_speed = 0.05f;
+			// left and right arrows
+			if (is_key_down(key_left)) {
+				sprites[player_sprite].translate(-ship_speed, 0);
+				//if (sprites[player_sprite].collides_with(sprites[first_border_sprite + 2])) {
+				//	sprites[player_sprite].translate(+ship_speed, 0);
+				//}
+			}
+			else if (is_key_down(key_right)) {
+				sprites[player_sprite].translate(+ship_speed, 0);
+				//if (sprites[player_sprite].collides_with(sprites[first_border_sprite + 3])) {
+				//	sprites[player_sprite].translate(-ship_speed, 0);
+				//}
+			}
+			else if (is_key_down(key_up)) {
+				sprites[player_sprite].translate(0, +ship_speed);
+				//if (sprites[player_sprite].collides_with(sprites[first_border_sprite + 3])) {
+				//	sprites[player_sprite].translate(-ship_speed, 0);
+				//}
+			}
+			else if (is_key_down(key_down)) {
+				sprites[player_sprite].translate(0, -ship_speed);
+				//if (sprites[player_sprite].collides_with(sprites[first_border_sprite + 3])) {
+				//	sprites[player_sprite].translate(-ship_speed, 0);
+				//}
+			}
+		}
+
+
 		int current_sprite;
+		int player_sprite;
 	public:
 
 		// this is called when we construct the class
@@ -255,13 +289,23 @@ namespace octet {
 		}
 
 		void draw_map()
-		{			
-			current_sprite = 0;
+		{
+			current_sprite = 1;
 			lab.construct_labyrinth();
 			draw_walls();
-			//staircase
-			//vec2 most_distant_cell = labyrinth_stack->distant_cell;
-			//sprites[current_sprite++].init(gray, x0 + step*most_distant_cell.x() + step/2 + net_width, y0 + step*most_distant_cell.y() + step/2 + net_width, step, step);
+
+			int x0 = -lab.map_size + lab.alignment_left,
+				x1 = lab.map_size - lab.alignment_right,
+				y0 = -lab.map_size + lab.alignment_top,
+				y1 = lab.map_size - lab.alignment_bottom,
+				step = lab.step;
+
+			float	net_width = 0.35f;
+
+			player_sprite = current_sprite;
+			GLuint player = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/ship.gif");
+			sprites[current_sprite++].init(player, x0 + lab.entrance_index*step + step / 2., y0 + step / 2., step - 2 * net_width, step - 2 * net_width);
+
 		}
 
 		void draw_walls()
@@ -271,7 +315,8 @@ namespace octet {
 			GLuint wall = resource_dict::get_texture_handle(GL_RGB, "#ffffff");
 			GLuint empty = resource_dict::get_texture_handle(GL_RGB, "#000000");
 			GLuint gray = resource_dict::get_texture_handle(GL_RGB, "#111111");
-			GLuint exit = resource_dict::get_texture_handle(GL_RGB, "#FF0000");
+			GLuint exit = resource_dict::get_texture_handle(GL_RGBA, "assets/invaderers/invaderer.gif");
+
 
 
 			gray = wall;
@@ -349,9 +394,14 @@ namespace octet {
 			alListener3f(AL_POSITION, cpos.x(), cpos.y(), cpos.z());
 		}
 
-		void draw_sprite(int _texture, float x, float y, float w, float h)
-		{
-			sprites[current_sprite++].init(_texture, x, y, w, h);
+
+		void simulate() {
+			if (game_over) {
+				return;
+			}
+
+			move_ship();
+
 		}
 	};
 }
