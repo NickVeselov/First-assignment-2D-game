@@ -103,7 +103,7 @@ public:
 		enum {
 
 			//labyrinth parameters
-			alignment_top = 2,
+			alignment_top = 10,
 			alignment_bottom = alignment_top,
 			alignment_left = alignment_top,
 			alignment_right = alignment_top,
@@ -111,14 +111,14 @@ public:
 			lab_size = 100,
 			map_size = lab_size/2 + alignment_left,
 
-			step = 10,
+			step = 5,
 
 			cells_number = 2*(map_size - alignment_top) / step,
 		};
 		int entrance_index;
 		vec2 exit;
 
-		Cell **cells;
+		Cell cells[cells_number][cells_number];
 private:
 		bool visited[cells_number][cells_number];
 		Stack *labyrinth_stack;
@@ -249,18 +249,13 @@ private:
 	public:
 
 		Labyrinth()
-		{
-			cells = new Cell*[cells_number];
-			
+		{			
 			for (int i = 0; i < cells_number; i++)
-			{
-				cells[i] = new Cell[cells_number];
 				for (int j = 0; j < cells_number; j++)
 				{
 					cells[i][j].x = j;
 					cells[i][j].y = i;
 				}
-			}
 		}
 
 		void construct_labyrinth()
@@ -269,6 +264,8 @@ private:
 			entrance_index = rand() % cells_number;
 			
 			construct_walls();
+
+			delete labyrinth_stack;
 		}
 	};
 

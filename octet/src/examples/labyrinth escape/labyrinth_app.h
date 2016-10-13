@@ -95,6 +95,12 @@ namespace octet {
 			modelToWorld.translate(x, y, 0);
 		}
 
+		void rotateY180()
+		{
+			//modelToWorld.rotate(angle, x, y, z);
+			modelToWorld.rotateY180();
+		}
+
 		// position the object relative to another.
 		void set_relative(sprite &rhs, float x, float y) {
 			modelToWorld = rhs.modelToWorld;
@@ -128,12 +134,12 @@ namespace octet {
 		}
 	};
 
-	struct Player
+	struct character
 	{
 	public:
 		int x;
 		int y;
-
+		bool pointed_left = false;
 	};
 
 	class labyrinth_app : public octet::app {
@@ -144,7 +150,7 @@ namespace octet {
 		texture_shader texture_shader_;
 
 		Labyrinth lab;
-		Player player;
+		character character;
 
 		enum {
 			num_sound_sources = 8,
@@ -177,6 +183,7 @@ namespace octet {
 
 		// game state
 		bool game_over;
+		bool level_complete;
 		int score;
 
 		// speed of enemy
@@ -238,40 +245,51 @@ namespace octet {
 
 		//dynamic behaviour
 
-		// use the keyboard to move the player
+		// use the keyboard to move the character
 		void move_player() {
-			const float ship_speed = lab.step;
-			// left and right arrows
+			const float movespeed = lab.step;
+			//move
+			
 			if (is_key_down(key_left)) {
-				if ((!lab.cells[player.y][player.x].left_wall)&&(player.x > 0))
+				if ((!lab.cells[character.y][character.x].left_wall)&&(character.x > 0))
 				{
-					sprites[player_sprite].translate(-ship_speed, 0);
-					player.x--;
+					if (!character.pointed_left)
+					{
+						sprites[player_sprite].rotateY180();
+						character.pointed_left = true;
+					}
+					sprites[player_sprite].translate(+movespeed, 0);
+					character.x--;
 				}
 			}
-			else if ((is_key_down(key_right)) && (player.x < lab.cells_number)) {
-				if (!lab.cells[player.y][player.x].right_wall)
+			else if ((is_key_down(key_right)) && (character.x < lab.cells_number)) {
+				if (!lab.cells[character.y][character.x].right_wall)
 				{
-					sprites[player_sprite].translate(+ship_speed, 0);
-					player.x++;
+					if (character.pointed_left)
+					{
+						sprites[player_sprite].rotateY180();
+						character.pointed_left = false;
+					}
+					sprites[player_sprite].translate(+movespeed, 0);
+					character.x++;
 				}
 			}
-			else if ((is_key_down(key_up)) && (player.y < lab.cells_number)) {
-				if (!lab.cells[player.y][player.x].top_wall)
+			else if ((is_key_down(key_up)) && (character.y < lab.cells_number)) {
+				if (!lab.cells[character.y][character.x].top_wall)
 				{
-					sprites[player_sprite].translate(0, +ship_speed);
-					player.y++;
+					sprites[player_sprite].translate(0, +movespeed);
+					character.y++;
 				}
 			}
-			else if ((is_key_down(key_down)) && (player.y > 0)) {
-				if (!lab.cells[player.y][player.x].bottom_wall)
+			else if ((is_key_down(key_down)) && (character.y > 0)) {
+				if (!lab.cells[character.y][character.x].bottom_wall)
 				{
-					sprites[player_sprite].translate(0, -ship_speed);
-					player.y--;
+					sprites[player_sprite].translate(0, -movespeed);
+					character.y--;
 				}
 			}
-
-			if ((player.x == (int)lab.exit.x()) && (player.y == (int)lab.exit.y()))
+			//check end
+			if ((character.x == (int)lab.exit.x()) && (character.y == (int)lab.exit.y()))
 			{
 				game_over = true;
 				sprites[player_sprite].is_enabled() = false;
@@ -299,7 +317,7 @@ namespace octet {
 			cameraToWorld.loadIdentity();
 			cameraToWorld.translate(0, 0, lab.map_size);
 
-			//font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
+			font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
 
 			// set the border to white for clarity
 			draw_map();
@@ -312,6 +330,7 @@ namespace octet {
 
 			num_lives = 5;
 			game_over = false;
+			level_complete = false;
 			score = 0;
 		}
 
@@ -333,14 +352,12 @@ namespace octet {
 			GLuint player_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/character.gif");
 			sprites[current_sprite++].init(player_texture, x0 + lab.entrance_index*step + step / 2., y0 + step / 2., step - 2 * net_width, step - 2 * net_width);
 
-			player.x = lab.entrance_index;
-			player.y = 0;
+			character.x = lab.entrance_index;
+			character.y = 0;
 		}
 
 		void draw_walls()
 		{
-			Cell **walls = lab.cells;
-
 			GLuint wall = resource_dict::get_texture_handle(GL_RGB, "#ffffff");
 			GLuint empty = resource_dict::get_texture_handle(GL_RGB, "#000000");
 			GLuint gray = resource_dict::get_texture_handle(GL_RGB, "#111111");
@@ -372,16 +389,16 @@ namespace octet {
 			for (int i = 0; i<lab.cells_number; i++)
 				for (int j = 0; j < lab.cells_number; j++)
 				{
-					if (walls[i][j].left_wall)
+					if (lab.cells[i][j].left_wall)
 						sprites[current_sprite++].init(gray, x0 + j*step, y0 + i*step + step / 2., net_width, step + net_width);
 
-					if (walls[i][j].top_wall)
+					if (lab.cells[i][j].top_wall)
 						sprites[current_sprite++].init(gray, x0 + j*step + step / 2., y0 + (i + 1)*step, step + net_width, net_width);
 
-					if (walls[i][j].right_wall)
+					if (lab.cells[i][j].right_wall)
 						sprites[current_sprite++].init(gray, x0 + (j + 1)*step, y0 + i*step + step / 2., net_width, step + net_width);
 
-					if (walls[i][j].bottom_wall)
+					if (lab.cells[i][j].bottom_wall)
 						sprites[current_sprite++].init(gray, x0 + j*step + step / 2., y0 + i*step, step + net_width, net_width);
 				}
 
@@ -389,6 +406,13 @@ namespace octet {
 
 			sprites[current_sprite++].init(exit, x0 + lab.exit.x()*step + step / 2., y0 + lab.exit.y()*step + step / 2., step - 2*net_width, step - 2*net_width);
 		}
+		
+		void generate_new_level()
+		{
+			glClearColor(0, 0, 0, 1);
+			draw_map();
+		}
+
 
 		// this is called to draw the world
 		void draw_world(int x, int y, int w, int h) {
@@ -412,21 +436,23 @@ namespace octet {
 				sprites[i].render(texture_shader_, cameraToWorld);
 			}
 
-			char score_text[32];
+			char score_text[32] = "Swlabr";
 			sprintf(score_text, "score: %d   lives: %d\n", score, num_lives);
-			draw_text(texture_shader_, -1.75f, 2, 1.0f / 256, score_text);
+			draw_text(texture_shader_, 10, 10, 2000, score_text);
 
 			// move the listener with the camera
 			vec4 &cpos = cameraToWorld.w();
 			alListener3f(AL_POSITION, cpos.x(), cpos.y(), cpos.z());
 		}
 
-
 		void simulate() {	
 
-			if (game_over) {
-				return;
+			if (level_complete) {
+				generate_new_level();
 			}
+
+			if (game_over)
+				return;
 			move_player();
 		}
 	};
