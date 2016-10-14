@@ -136,11 +136,18 @@ namespace octet {
 
 	struct character
 	{
-	public:
 		int x;
 		int y;
 		int speed;
 		bool pointed_left = false;
+
+		vec2 actual_position;
+	};
+
+	struct StatusBar {
+	public:
+		int x;
+		int y;
 	};
 
 	class labyrinth_app : public octet::app {
@@ -152,6 +159,7 @@ namespace octet {
 
 		Labyrinth lab;
 		character character;
+		StatusBar status_bar;
 
 		enum {
 			num_sound_sources = 8,
@@ -254,11 +262,15 @@ namespace octet {
 			{
 				cameraToWorld.translate(camera_path_remaining.x()*camera_speed.x(), 0, 0);
 				camera_path_remaining.x() -= camera_path_remaining.x() * camera_speed.x();
+				sprites[board_sprite].translate(camera_path_remaining.x()*camera_speed.x(), 0);
+				status_bar.x += camera_path_remaining.x()*camera_speed.x();
 			}
 			if (camera_path_remaining.y() != 0)
 			{
 				cameraToWorld.translate(0, camera_path_remaining.y()*camera_speed.y(), 0);
 				camera_path_remaining.y() -= camera_path_remaining.y() * camera_speed.y();
+				sprites[board_sprite].translate(0, camera_path_remaining.y()*camera_speed.y());
+				status_bar.y += camera_path_remaining.y();
 			}
 		}
 
@@ -311,7 +323,10 @@ namespace octet {
 
 			//give camera a command to move
 			if (character.x != x || character.y != y)
+			{
 				camera_path_remaining += vec2((character.x - x)*character.speed, (character.y - y)*character.speed);
+				character.actual_position += vec2((character.x - x)*character.speed, (character.y - y)*character.speed);
+			}
 
 			//check end
 			if ((character.x == (int)lab.exit.x()) && (character.y == (int)lab.exit.y()))
@@ -327,6 +342,7 @@ namespace octet {
 		int current_sprite;
 		int character_sprite;
 		int game_over_sprite;
+		int board_sprite;
 
 	public:
 
@@ -365,7 +381,6 @@ namespace octet {
 			character.speed = lab.step;
 			score = 0;
 		}
-
 		void draw_map()
 		{
 			current_sprite = 1;
@@ -390,6 +405,15 @@ namespace octet {
 
 			character.x = lab.entrance_index;
 			character.y = 0;
+			character.actual_position = vec2(x0 + lab.entrance_index*step, y0);
+			
+			//status bar
+			GLuint white = resource_dict::get_texture_handle(GL_RGB, "#333333");
+			int bar_height = 13;
+			board_sprite = current_sprite;
+			sprites[current_sprite++].init(white, character.actual_position.x(), character.actual_position.y() - camera_view_range/2.f, 2 * camera_view_range - bar_height / 2.f, bar_height);
+			status_bar.x = (int)character.actual_position.x();
+			status_bar.y = (int)character.actual_position.y() - camera_view_range / 2.f;
 		}
 
 		void draw_walls()
@@ -468,13 +492,15 @@ namespace octet {
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 			// draw all the sprites
-			for (int i = 0; i != num_sprites; ++i) {
+			for (int i = 0; i != current_sprite; ++i) {
 				sprites[i].render(texture_shader_, cameraToWorld);
 			}
 
+
+
 			char score_text[32] = "Swlabr";
 			sprintf(score_text, "score: %d   lives: %d\n", score);
-			draw_text(texture_shader_, 10, 10, 2000, score_text);
+			draw_text(texture_shader_, status_bar.x, status_bar.y, 1, score_text);
 
 			// move the listener with the camera
 			vec4 &cpos = cameraToWorld.w();
