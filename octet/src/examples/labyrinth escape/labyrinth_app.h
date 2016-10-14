@@ -139,6 +139,7 @@ namespace octet {
 	public:
 		int x;
 		int y;
+		int speed;
 		bool pointed_left = false;
 	};
 
@@ -173,13 +174,7 @@ namespace octet {
 
 		};
 
-		// timers for missiles and bombs
-		int missiles_disabled;
-		int bombs_disabled;
-
-		// accounting for bad guys
-		int live_invaderers;
-		int num_lives;
+		int camera_view_range;
 
 		// game state
 		bool game_over;
@@ -245,20 +240,45 @@ namespace octet {
 
 		//dynamic behaviour
 
+		vec2 camera_path_remaining;
+		vec2 camera_speed;
+		vec2 basic_camera_speed;
+
+		//smoothly move camera
+		void move_camera()
+		{
+			//adjust speed
+			int spaces_to_go = abs(camera_path_remaining.x() / lab.step) + abs(camera_path_remaining.y() / lab.step) + 1;
+			camera_speed = basic_camera_speed * spaces_to_go;
+			if (camera_path_remaining.x() != 0)
+			{
+				cameraToWorld.translate(camera_path_remaining.x()*camera_speed.x(), 0, 0);
+				camera_path_remaining.x() -= camera_path_remaining.x() * camera_speed.x();
+			}
+			if (camera_path_remaining.y() != 0)
+			{
+				cameraToWorld.translate(0, camera_path_remaining.y()*camera_speed.y(), 0);
+				camera_path_remaining.y() -= camera_path_remaining.y() * camera_speed.y();
+			}
+		}
+
 		// use the keyboard to move the character
 		void move_player() {
 			const float movespeed = lab.step;
 			//move
-			
+
+			int x = character.x,
+				y = character.y;
+
 			if (is_key_down(key_left)) {
-				if ((!lab.cells[character.y][character.x].left_wall)&&(character.x > 0))
+				if ((!lab.cells[character.y][character.x].left_wall) && (character.x > 0))
 				{
 					if (!character.pointed_left)
 					{
-						sprites[player_sprite].rotateY180();
+						sprites[character_sprite].rotateY180();
 						character.pointed_left = true;
 					}
-					sprites[player_sprite].translate(+movespeed, 0);
+					sprites[character_sprite].translate(+movespeed, 0);
 					character.x--;
 				}
 			}
@@ -267,39 +287,45 @@ namespace octet {
 				{
 					if (character.pointed_left)
 					{
-						sprites[player_sprite].rotateY180();
+						sprites[character_sprite].rotateY180();
 						character.pointed_left = false;
 					}
-					sprites[player_sprite].translate(+movespeed, 0);
+					sprites[character_sprite].translate(+movespeed, 0);
 					character.x++;
 				}
 			}
 			else if ((is_key_down(key_up)) && (character.y < lab.cells_number)) {
 				if (!lab.cells[character.y][character.x].top_wall)
 				{
-					sprites[player_sprite].translate(0, +movespeed);
+					sprites[character_sprite].translate(0, +movespeed);
 					character.y++;
 				}
 			}
 			else if ((is_key_down(key_down)) && (character.y > 0)) {
 				if (!lab.cells[character.y][character.x].bottom_wall)
 				{
-					sprites[player_sprite].translate(0, -movespeed);
+					sprites[character_sprite].translate(0, -movespeed);
 					character.y--;
 				}
 			}
+
+			//give camera a command to move
+			if (character.x != x || character.y != y)
+				camera_path_remaining += vec2((character.x - x)*character.speed, (character.y - y)*character.speed);
+
 			//check end
 			if ((character.x == (int)lab.exit.x()) && (character.y == (int)lab.exit.y()))
 			{
 				game_over = true;
-				sprites[player_sprite].is_enabled() = false;
-				sprites[player_sprite].translate(-2*lab.map_size, 0);
-				sprites[game_over_sprite].translate(0, - 2*lab.map_size);
+				sprites[character_sprite].is_enabled() = false;
+				sprites[character_sprite].translate(-2 * lab.map_size, 0);
+				sprites[game_over_sprite].translate(character.x*lab.step - 3 * lab.map_size, character.y*lab.step);
 			}
 		}
 
+		
 		int current_sprite;
-		int player_sprite;
+		int character_sprite;
 		int game_over_sprite;
 
 	public:
@@ -313,9 +339,12 @@ namespace octet {
 			// set up the shader
 			texture_shader_.init();
 
+			camera_view_range = lab.map_size*0.7;
+			basic_camera_speed = vec2(lab.step / 1000.f, lab.step / 1000.f);
+			camera_path_remaining = vec2(0, 0);
+
 			// set up the matrices with a camera 5 units from the origin
 			cameraToWorld.loadIdentity();
-			cameraToWorld.translate(0, 0, lab.map_size);
 
 			font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
 
@@ -325,12 +354,15 @@ namespace octet {
 
 			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/game over.gif");
 			game_over_sprite = current_sprite;
-			sprites[current_sprite++].init(GameOver, 0, 2*lab.map_size, 2*lab.map_size - lab.alignment_left - lab.alignment_right, 2*lab.map_size - lab.alignment_top - lab.alignment_bottom);
+			sprites[current_sprite++].init(GameOver, 2*lab.map_size + lab.alignment_left + character.x*lab.step, -(lab.map_size - camera_view_range / 2),
+				2 * camera_view_range, 2 * camera_view_range);
+
+			cameraToWorld.translate(- lab.map_size + lab.alignment_left + character.x*lab.step, -(lab.map_size - camera_view_range / 2), camera_view_range);
 
 
-			num_lives = 5;
 			game_over = false;
 			level_complete = false;
+			character.speed = lab.step;
 			score = 0;
 		}
 
@@ -348,9 +380,13 @@ namespace octet {
 
 			float net_width = 0.35f;
 
-			player_sprite = current_sprite;
-			GLuint player_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/character.gif");
-			sprites[current_sprite++].init(player_texture, x0 + lab.entrance_index*step + step / 2., y0 + step / 2., step - 2 * net_width, step - 2 * net_width);
+			//test - increased hall width
+			int hall_width = 1;
+
+			//character
+			character_sprite = current_sprite;
+			GLuint character_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/character.gif");
+			sprites[current_sprite++].init(character_texture, x0 + lab.entrance_index*step + step / 2.f, y0 + step / 2.f, (step - 2 * net_width) / hall_width, (step - 2 * net_width) / hall_width);
 
 			character.x = lab.entrance_index;
 			character.y = 0;
@@ -382,7 +418,7 @@ namespace octet {
 			sprites[current_sprite++].init(wall, x1, 0, wall_width, y1 - y0 + wall_width);
 
 			//entrance
-				sprites[current_sprite++].init(empty, x0 + lab.entrance_index*step + step / 2., y0 , step - net_width, border_width);
+				sprites[current_sprite++].init(empty, x0 + lab.entrance_index*step + step / 2.f, y0 , step - net_width, border_width);
 
 			//inner walls
 
@@ -390,21 +426,21 @@ namespace octet {
 				for (int j = 0; j < lab.cells_number; j++)
 				{
 					if (lab.cells[i][j].left_wall)
-						sprites[current_sprite++].init(gray, x0 + j*step, y0 + i*step + step / 2., net_width, step + net_width);
+						sprites[current_sprite++].init(gray, x0 + j*step, y0 + i*step + step / 2.f, net_width, step + net_width);
 
 					if (lab.cells[i][j].top_wall)
-						sprites[current_sprite++].init(gray, x0 + j*step + step / 2., y0 + (i + 1)*step, step + net_width, net_width);
+						sprites[current_sprite++].init(gray, x0 + j*step + step / 2.f, y0 + (i + 1)*step, step + net_width, net_width);
 
 					if (lab.cells[i][j].right_wall)
-						sprites[current_sprite++].init(gray, x0 + (j + 1)*step, y0 + i*step + step / 2., net_width, step + net_width);
+						sprites[current_sprite++].init(gray, x0 + (j + 1)*step, y0 + i*step + step / 2.f, net_width, step + net_width);
 
 					if (lab.cells[i][j].bottom_wall)
-						sprites[current_sprite++].init(gray, x0 + j*step + step / 2., y0 + i*step, step + net_width, net_width);
+						sprites[current_sprite++].init(gray, x0 + j*step + step / 2.f, y0 + i*step, step + net_width, net_width);
 				}
 
 			//exit
 
-			sprites[current_sprite++].init(exit, x0 + lab.exit.x()*step + step / 2., y0 + lab.exit.y()*step + step / 2., step - 2*net_width, step - 2*net_width);
+			sprites[current_sprite++].init(exit, x0 + lab.exit.x()*step + step / 2.f, y0 + lab.exit.y()*step + step / 2.f, step - 2*net_width, step - 2*net_width);
 		}
 		
 		void generate_new_level()
@@ -437,7 +473,7 @@ namespace octet {
 			}
 
 			char score_text[32] = "Swlabr";
-			sprintf(score_text, "score: %d   lives: %d\n", score, num_lives);
+			sprintf(score_text, "score: %d   lives: %d\n", score);
 			draw_text(texture_shader_, 10, 10, 2000, score_text);
 
 			// move the listener with the camera
@@ -452,8 +488,14 @@ namespace octet {
 			}
 
 			if (game_over)
+			{
+				//cameraToWorld.translate((int)camera_path_remaining.x(), (int)camera_path_remaining.y(), 0);
 				return;
+			}
+
 			move_player();
+
+			move_camera();
 		}
 	};
 }

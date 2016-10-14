@@ -111,18 +111,17 @@ public:
 			lab_size = 100,
 			map_size = lab_size/2 + alignment_left,
 
-			step = 5,
+			step = 10,
 
 			cells_number = 2*(map_size - alignment_top) / step,
 		};
 		int entrance_index;
 		vec2 exit;
-
+		int hall_width = 2;
 		Cell cells[cells_number][cells_number];
 private:
 		bool visited[cells_number][cells_number];
 		Stack *labyrinth_stack;
-
 
 		//Recursive backtracker algorithm: https://en.wikipedia.org/wiki/Maze_generation_algorithm
 		void construct_walls()
