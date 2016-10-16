@@ -4,6 +4,23 @@
 
 namespace octet {
 
+	struct character
+	{
+		int x;
+		int y;
+		int speed;
+		bool pointed_left = false;
+
+		vec2 actual_position;
+	};
+
+	struct StatusBar {
+	public:
+		int x;
+		int y;
+		int height;
+	};
+
 	struct Cell {
 		int x;
 		int y;
@@ -101,20 +118,14 @@ namespace octet {
 		};
 public:
 		enum {
+			absolute_size = 150,
+			cell_size = 30,
 
-			//labyrinth parameters
-			alignment_top = 10,
-			alignment_bottom = alignment_top,
-			alignment_left = alignment_top,
-			alignment_right = alignment_top,
-
-			lab_size = 100,
-			map_size = lab_size/2 + alignment_left,
-
-			step = 10,
-
-			cells_number = 2*(map_size - alignment_top) / step,
+			cells_number = absolute_size / cell_size,
+			half_size = absolute_size/2,
+			half_cell = cell_size/2,
 		};
+
 		int entrance_index;
 		vec2 exit;
 		int hall_width = 2;
@@ -129,7 +140,13 @@ private:
 			//matrix with elements, which indicates whether the cell was visited by algorithm
 			for (int i = 0; i < cells_number; i++)
 				for (int j = 0; j < cells_number; j++)
+				{
 					visited[i][j] = false;
+					cells[i][j].top_wall = true;
+					cells[i][j].bottom_wall = true;
+					cells[i][j].right_wall = true;
+					cells[i][j].left_wall = true;
+				}
 
 
 			vec2 current_cell(entrance_index, 0);
