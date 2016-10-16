@@ -12,6 +12,8 @@ namespace octet {
 		bool pointed_left = false;
 
 		vec2 actual_position;
+
+		int steps;
 	};
 
 	struct StatusBar {
@@ -54,9 +56,9 @@ namespace octet {
 		private:
 			StackNode *head;
 			int count = 1;
-			int max_number = 1;
 		public:
 			vec2 distant_cell;
+			int path_length = 1;
 			vec2 pop()
 			{
 				if (head->next == NULL)
@@ -77,9 +79,9 @@ namespace octet {
 				StackNode *pushed = new StackNode(x, y, head);
 				head = pushed;
 				count++;
-				if (count > max_number)
+				if (count > path_length)
 				{
-					max_number = count;
+					path_length = count;
 					distant_cell = vec2(x, y);
 				}
 			}
@@ -118,8 +120,8 @@ namespace octet {
 		};
 public:
 		enum {
-			absolute_size = 150,
-			cell_size = 30,
+			absolute_size = 160,
+			cell_size = 16,
 
 			cells_number = absolute_size / cell_size,
 			half_size = absolute_size/2,
@@ -128,6 +130,7 @@ public:
 
 		int entrance_index;
 		vec2 exit;
+		int path_length;
 		int hall_width = 2;
 		Cell cells[cells_number][cells_number];
 private:
@@ -201,6 +204,7 @@ private:
 				}
 			}
 			exit = labyrinth_stack->distant_cell;
+			path_length = labyrinth_stack->path_length;
 		}
 
 		vec2 find_unvisited_cell(int cur_x, int cur_y)

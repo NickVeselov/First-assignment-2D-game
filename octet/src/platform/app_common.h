@@ -33,6 +33,7 @@ namespace octet {
     key_tab = 9,
     key_esc = 27,
     key_space = 32,
+	key_enter = 13,
 
     // other keys have the following codes:
     key_f1 = 0x80,
