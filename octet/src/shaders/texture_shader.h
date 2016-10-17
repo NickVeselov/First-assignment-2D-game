@@ -15,8 +15,10 @@ namespace octet { namespace shaders {
 
     // index for texture sampler
     GLuint samplerIndex_;
+	GLfloat transparencyIndex_;
   public:
-    void init() {
+    void init() 
+	{
       // this is the vertex shader.
       // it is called for each corner of each triangle
       // it inputs pos and uv from each corner
@@ -29,7 +31,9 @@ namespace octet { namespace shaders {
 
         uniform mat4 modelToProjection;
 
-        void main() { gl_Position = modelToProjection * pos; uv_ = uv; }
+        void main() { 
+			gl_Position = modelToProjection * pos; uv_ = uv; 
+		}
       );
 
       // this is the fragment shader
@@ -39,7 +43,10 @@ namespace octet { namespace shaders {
       const char fragment_shader[] = SHADER_STR(
         varying vec2 uv_;
         uniform sampler2D sampler;
-		void main() { gl_FragColor = texture2D(sampler, uv_); }
+		void main()
+		{
+			gl_FragColor = texture2D(sampler, uv_);// *vec4(1, 1, 1, transparencyIndex_);
+		}
       );
     
       // use the common shader code to compile and link the shaders
@@ -51,12 +58,13 @@ namespace octet { namespace shaders {
       samplerIndex_ = glGetUniformLocation(program(), "sampler");
     }
 
-    void render(const mat4t &modelToProjection, int sampler) {
+    void render(const mat4t &modelToProjection, int sampler, float transparency) {
       // tell openGL to use the program
       shader::render();
 
       // customize the program with uniforms
       glUniform1i(samplerIndex_, sampler);
+	  glUniform1f(transparencyIndex_, transparency);
       glUniformMatrix4fv(modelToProjectionIndex_, 1, GL_FALSE, modelToProjection.get());
     }
   };

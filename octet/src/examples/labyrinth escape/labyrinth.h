@@ -14,6 +14,9 @@ namespace octet {
 		vec2 actual_position;
 
 		int steps;
+		int initial_steps;
+		float transparency;
+		float fading_point;
 	};
 
 	struct StatusBar {
