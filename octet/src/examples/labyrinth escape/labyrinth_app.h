@@ -259,16 +259,16 @@ namespace octet {
 				camera_path_remaining -= camera_speed;
 			}
 
-			//Z movement and character transparency
-			if ((character.initial_steps - character.steps) / character.fading_point > (1 - character.transparency)/0.1f + 1)
-			{
-				camera_path_remaining.z() = (camera_max_distance - camera_initial_distance)*0.1f;
-				character.transparency -= 0.1f;
+			//Z movement and character transparency - disabled
+			//if ((character.initial_steps - character.steps) / character.fading_point > (1 - character.transparency)/0.1f + 1)
+			//{
+			//	camera_path_remaining.z() = (camera_max_distance - camera_initial_distance)*0.1f;
+			//	character.transparency -= 0.1f;
 
-				sprites[board_sprite].translate(0, -camera_path_remaining.z()/1.1f);
-				//sprites[board_sprite].resize(camera_path_remaining.z() * 1.41f / , camera_path_remaining.z() / 1.41f);
-				//sprites[board_sprite]
-			}
+			//	sprites[board_sprite].translate(0, -camera_path_remaining.z()/1.1f);
+			//	//sprites[board_sprite].resize(camera_path_remaining.z() * 1.41f / , camera_path_remaining.z() / 1.41f);
+			//	//sprites[board_sprite]
+			//}
 		}
 		
 		// use the keyboard to move the character
@@ -398,7 +398,8 @@ namespace octet {
 			character.x = lab.entrance_index;
 			character.y = 0;
 			character.actual_position = vec2(lab.entrance_index*lab.cell_size, 0);
-			character.initial_steps = character.steps = lab.path_length*1.1f + steps_collection;
+			character.initial_steps = character.steps = lab.path_length + steps_collection;
+			character.initial_steps = character.steps += rand() % character.steps / 2.f;
 			character.transparency = 1.0f;
 			character.fading_point = character.steps / 10.f;
 
@@ -438,6 +439,9 @@ namespace octet {
 
 					if ((lab.cells[i][j].bottom_wall) && (i != 0))
 						sprites[current_sprite++].init(wall, j*lab.cell_size + lab.half_cell, i*lab.cell_size, lab.cell_size + wall_width, wall_width);
+
+					if (lab.cells[i][j].distance > 5)
+						sprites[current_sprite++].init(exit_staircase, j*lab.cell_size + lab.half_cell, i*lab.cell_size + lab.half_cell, lab.cell_size - wall_width,lab.cell_size - wall_width);
 				}
 
 			//outer walls
@@ -507,7 +511,8 @@ namespace octet {
 			draw_map(0);
 
 			//center camera on the character
-			camera_position = vec2(sprites[character_sprite].get_position().x(), lab.absolute_size / 6.f);
+			//camera_position = vec2(sprites[character_sprite].get_position().x(), lab.absolute_size / 6.f);
+			camera_position = vec2(lab.half_size, lab.half_size);
 			cameraToWorld.translate(camera_position.x(),camera_position.y(), camera_initial_distance);
 			//cameraToWorld.translate(lab.half_size, lab.half_size, camera_initial_distance);
 

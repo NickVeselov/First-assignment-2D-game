@@ -29,10 +29,11 @@ namespace octet {
 	struct Cell {
 		int x;
 		int y;
-		bool left_wall = true;
-		bool top_wall = true;
-		bool right_wall = true;
-		bool bottom_wall = true;
+		bool left_wall;
+		bool top_wall;
+		bool right_wall;
+		bool bottom_wall;
+		int distance;
 		Cell() { }
 		Cell(int X, int Y)
 		{
@@ -68,7 +69,7 @@ namespace octet {
 					return (vec2(-1, -1));
 				else
 				{
-					StackNode *popped = head;
+					StackNode *popped = head;					
 					StackNode *nexthead = head->next;
 					delete popped;
 					head = nexthead;
@@ -136,9 +137,12 @@ public:
 		int path_length;
 		int hall_width = 2;
 		Cell cells[cells_number][cells_number];
+
 private:
 		bool visited[cells_number][cells_number];
 		Stack *labyrinth_stack;
+		int return_path_length;
+		vec2 dead_end;
 
 		//Recursive backtracker algorithm: https://en.wikipedia.org/wiki/Maze_generation_algorithm
 		void construct_walls()
@@ -152,8 +156,10 @@ private:
 					cells[i][j].bottom_wall = true;
 					cells[i][j].right_wall = true;
 					cells[i][j].left_wall = true;
+					cells[i][j].distance = 0;
 				}
 
+			return_path_length = 0;
 
 			vec2 current_cell(entrance_index, 0);
 			labyrinth_stack = new Stack(entrance_index, 0);
@@ -171,7 +177,12 @@ private:
 				else
 				{
 					current_cell = labyrinth_stack->get_head();
-
+					if (return_path_length > 1)
+					{
+						cells[(int)dead_end.y()][(int)dead_end.x()].distance = return_path_length;
+						std::cout << return_path_length << "[" << dead_end.y() << "," << dead_end.x() << "]" << std::endl;
+						return_path_length = 0;
+					}
 					int x = next_cell.x(), y = next_cell.y();
 					labyrinth_stack->push(x, y);
 					visited[x][y] = true;
@@ -250,6 +261,9 @@ private:
 			//no unvisited neighbours
 			else
 			{
+				if (return_path_length == 0)
+					dead_end = labyrinth_stack->get_head();
+				return_path_length++;
 				vec2 previous = labyrinth_stack->pop();
 				if (previous.x() == -1)
 					return previous;
