@@ -26,7 +26,8 @@ namespace octet {
 		int height;
 	};
 
-	struct Cell {
+	class Cell {
+	public:
 		int x;
 		int y;
 		bool left_wall;
@@ -39,6 +40,7 @@ namespace octet {
 		{
 			x = X; y = Y;
 		}
+		bool operator<(const Cell &rhs) const { return distance < rhs.distance; }
 	};
 
 	class Labyrinth {

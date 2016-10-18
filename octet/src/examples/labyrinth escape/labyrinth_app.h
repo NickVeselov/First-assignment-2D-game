@@ -217,6 +217,7 @@ namespace octet {
 		int camera_initial_distance;
 		int camera_max_distance;
 
+		std::vector<Cell> distant_cells;
 
 	#pragma endregion
 
@@ -419,10 +420,6 @@ namespace octet {
 			GLuint border = resource_dict::get_texture_handle(GL_RGB, "#FFFFFF");
 			GLuint wall = resource_dict::get_texture_handle(GL_RGB, "#888888");
 			GLuint void_space = resource_dict::get_texture_handle(GL_RGB, "#000000");
-			GLuint exit_staircase = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/staircase.gif");
-
-			//entrance
-			sprites[current_sprite++].init(void_space, lab.entrance_index*lab.cell_size + lab.half_cell, 0, lab.cell_size - wall_width, border_width);
 
 			//inner walls
 			for (int i = 0; i<lab.cells_number; i++)
@@ -440,8 +437,9 @@ namespace octet {
 					if ((lab.cells[i][j].bottom_wall) && (i != 0))
 						sprites[current_sprite++].init(wall, j*lab.cell_size + lab.half_cell, i*lab.cell_size, lab.cell_size + wall_width, wall_width);
 
-					if (lab.cells[i][j].distance > 5)
-						sprites[current_sprite++].init(exit_staircase, j*lab.cell_size + lab.half_cell, i*lab.cell_size + lab.half_cell, lab.cell_size - wall_width,lab.cell_size - wall_width);
+					if (lab.cells[i][j].distance > 0)
+						distant_cells.push_back(lab.cells[i][j]);
+						
 				}
 
 			//outer walls
@@ -449,11 +447,24 @@ namespace octet {
 			sprites[current_sprite++].init(border, lab.half_size, lab.absolute_size, lab.absolute_size + border_width, border_width);
 			sprites[current_sprite++].init(border, 0, lab.half_size, border_width, lab.absolute_size + border_width);
 			sprites[current_sprite++].init(border, lab.absolute_size, lab.half_size, border_width, lab.absolute_size + border_width);
+			
+			add_labyrinth_content(lab.cell_size - border_width - wall_width);
+		}
+
+		void add_labyrinth_content(float cell_size)
+		{
+			GLuint exit_staircase = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/staircase.gif");
+			GLuint soul_loot = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/loot.gif");
 
 			//exit
 			exit_sprite = current_sprite;
 			sprites[current_sprite++].init(exit_staircase, lab.exit.x()*lab.cell_size + lab.half_cell, lab.exit.y()*lab.cell_size + lab.half_cell,
-				lab.cell_size - 2 * wall_width, lab.cell_size - 2 * wall_width);
+				cell_size, cell_size);
+
+			std::sort(distant_cells.begin(), distant_cells.end());
+			for (int i = distant_cells.size() - 2; i >= distant_cells.size() - 5; i--)
+				sprites[current_sprite++].init(soul_loot, distant_cells[i].x*lab.cell_size + lab.half_cell, distant_cells[i].y*lab.cell_size + lab.half_cell,
+					cell_size*0.7f, cell_size*0.7f);
 		}
 
 		void generate_new_level()
