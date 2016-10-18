@@ -26,6 +26,15 @@ namespace octet {
 		int height;
 	};
 
+	enum Loot
+	{
+		double_value,
+		bonus,
+		exit,
+		fake_exit,
+		none
+	};
+
 	class Cell {
 	public:
 		int x;
@@ -35,7 +44,25 @@ namespace octet {
 		bool right_wall;
 		bool bottom_wall;
 		int distance;
-		Cell() { }
+		Loot loot = none;
+		int sprite_index;
+		int blinking_time;
+		Cell() 
+		{
+
+		}
+
+		void clear()
+		{
+			top_wall = true;
+			bottom_wall = true;
+			right_wall = true;
+			left_wall = true;
+			distance = 0;
+			blinking_time = 0;
+			loot = none;
+			sprite_index = -1;
+		}
 		Cell(int X, int Y)
 		{
 			x = X; y = Y;
@@ -110,19 +137,6 @@ namespace octet {
 					return false;
 			}
 
-			//ToDO: delete this function (test only)
-			void showElements()
-			{
-				StackNode *current = head;
-				std::cout << "Stack = ";
-				while (current != NULL)
-				{
-					std::cout << "[" << current->x << ", " << current->y << "] - ";
-					current = current->next;
-				}
-				std::cout << std::endl;
-
-			}
 		};
 public:
 		enum {
@@ -135,7 +149,6 @@ public:
 		};
 
 		int entrance_index;
-		vec2 exit;
 		int path_length;
 		int hall_width = 2;
 		Cell cells[cells_number][cells_number];
@@ -154,11 +167,7 @@ private:
 				for (int j = 0; j < cells_number; j++)
 				{
 					visited[i][j] = false;
-					cells[i][j].top_wall = true;
-					cells[i][j].bottom_wall = true;
-					cells[i][j].right_wall = true;
-					cells[i][j].left_wall = true;
-					cells[i][j].distance = 0;
+					cells[i][j].clear();
 				}
 
 			return_path_length = 0;
@@ -182,7 +191,6 @@ private:
 					if (return_path_length > 1)
 					{
 						cells[(int)dead_end.y()][(int)dead_end.x()].distance = return_path_length;
-						std::cout << return_path_length << "[" << dead_end.y() << "," << dead_end.x() << "]" << std::endl;
 						return_path_length = 0;
 					}
 					int x = next_cell.x(), y = next_cell.y();
@@ -219,7 +227,6 @@ private:
 					current_cell = next_cell;
 				}
 			}
-			exit = labyrinth_stack->distant_cell;
 			path_length = labyrinth_stack->path_length;
 		}
 

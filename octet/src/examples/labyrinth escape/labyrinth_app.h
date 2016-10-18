@@ -48,7 +48,6 @@ namespace octet {
 			halfHeight = h * 0.5f;
 			texture = _texture;
 			enabled = true;
-
 			x = x0;
 			y = y0;
 		}
@@ -63,6 +62,11 @@ namespace octet {
 			transparency = 1.0f;
 			x = x0;
 			y = y0;
+		}
+
+		void change_texture(int _texture)
+		{
+			texture = _texture;
 		}
 
 		void render(texture_shader &shader, mat4t &cameraToWorld) {
@@ -177,7 +181,7 @@ namespace octet {
 		StatusBar status_bar;
 
 		// big array of sprites
-		sprite sprites[2000];
+		sprite sprites[3000];
 
 		//special sprites
 		int current_sprite;
@@ -186,6 +190,7 @@ namespace octet {
 		int board_sprite;
 		int exit_sprite;
 		int level_complete_sprite;
+		int scary_image_sprite;
 
 		// game state
 		bool game_over;
@@ -217,7 +222,15 @@ namespace octet {
 		int camera_initial_distance;
 		int camera_max_distance;
 
-		std::vector<Cell> distant_cells;
+		Loot steps_alteration;
+		int steps_alteration_duration;
+		int blinking_sprites;
+		int scary_face_timeout;
+		int previous_scary_face_time_interval;
+
+		int bonus_value;
+
+		std::vector<Cell> content_cells;
 
 	#pragma endregion
 
@@ -327,6 +340,8 @@ namespace octet {
 					character.actual_position += vec2((character.x - x)*character.speed, (character.y - y)*character.speed);
 					character_moving = true;
 					character.steps--;
+					//check for looting/escaping
+					check_collision();
 				}
 			}
 			else
@@ -375,9 +390,98 @@ namespace octet {
 			glDrawElements(GL_TRIANGLES, num_quads * 6, GL_UNSIGNED_INT, indices);
 		}
 
+		//check collision
+		void check_collision()
+		{
+			//show scary face sometimes for suspense
+			int rand_scary_face = rand() % 100;
+			if (rand_scary_face == 0)
+				show_evil_face(5);
+
+			for (int i = 0; i < content_cells.size(); i++)
+			{
+				if (content_cells[i].x == character.x && content_cells[i].y == character.y)
+				{
+					switch (content_cells[i].loot)
+					{
+					case bonus:
+						character.steps += bonus_value;
+						sprites[content_cells[i].sprite_index].is_enabled() = false;
+						steps_alteration = content_cells[i].loot;
+						steps_alteration_duration = 100;
+						content_cells[i].loot = none;
+						break;
+					case double_value:
+						character.steps *= 2;
+						sprites[content_cells[i].sprite_index].is_enabled() = false;
+						steps_alteration = content_cells[i].loot;
+						steps_alteration_duration = 100;
+						content_cells[i].loot = none;
+						break;
+					case fake_exit:
+						character.steps -= bonus_value;
+						if (character.steps <= 0)
+							game_over = true;
+						sprites[content_cells[i].sprite_index].is_enabled() = false;
+						steps_alteration = content_cells[i].loot;
+						steps_alteration_duration = 100;
+						content_cells[i].loot = none;
+						show_evil_face(30);
+						break;
+					case exit:
+						sprites[character_sprite].is_enabled() = false;
+						//	//cameraToWorld.translate(camera_path_remaining.x(), camera_path_remaining.y(), 0);
+						//	//camera_position += camera_path_remaining;
+						sprites[board_sprite].is_enabled() = false;
+						level_complete = true;
+
+						//	int old_x = sprites[level_complete_sprite].get_position().x(),
+						//		old_y = sprites[level_complete_sprite].get_position().y();
+
+						//	sprites[level_complete_sprite].translate(camera_position.x() - old_x, camera_position.y() - old_y);
+						sprites[level_complete_sprite].is_enabled() = true;
+						break;
+					default:
+						break;
+					}
+				}
+				else if (content_cells[i].loot == fake_exit)
+				{
+					//component from the path made by character
+					int min_value = character.initial_steps - character.steps;
+					//random number
+					int random_component = rand() % character.initial_steps;
+					//if they combined divided by some constant > initial steps - show fake staircase for the few frames
+					if (((random_component + min_value)/1.6f > character.initial_steps)||(min_value < random_component && rand()%100 == 0))
+					{
+						sprites[content_cells[i].sprite_index].change_texture(resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/evil ghost.gif"));
+						blinking_sprites++;
+						content_cells[i].blinking_time = 30;
+					}
+				}
+			}
+		}
+
+		void show_evil_face(int duration)
+		{
+			if (previous_scary_face_time_interval > 5000)
+			{
+				previous_scary_face_time_interval = 0;
+				if (scary_image_sprite == -1)
+				{
+					GLint evil_face = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/evil ghost.gif");
+					scary_image_sprite = current_sprite;
+					sprites[current_sprite++].init(evil_face, lab.half_size, lab.half_size, 2 * camera_initial_distance, 2 * camera_initial_distance);
+				}
+				else
+					sprites[scary_image_sprite].is_enabled() = true;
+				scary_face_timeout = duration;
+			}
+		}
+
 		ALuint get_sound_source() { return sources[cur_source++ % 8]; }
 
-		void draw_map(int steps_collection)
+		void draw_map(int steps_pool)
 		{
 			float border_width = 1,
 				wall_width = 0.4f;
@@ -386,6 +490,8 @@ namespace octet {
 			current_sprite = 0;
 			lab.construct_labyrinth();
 			draw_walls(border_width, wall_width);
+
+			add_labyrinth_content(lab.cell_size - border_width - wall_width, steps_pool);
 
 			//test - increased hall width
 			int hall_width = 1;
@@ -396,22 +502,16 @@ namespace octet {
 			sprites[current_sprite++].init(character_texture, lab.entrance_index*lab.cell_size + lab.half_cell, lab.half_cell,
 				lab.cell_size - border_width - wall_width, lab.cell_size - border_width - wall_width);
 
-			character.x = lab.entrance_index;
-			character.y = 0;
-			character.actual_position = vec2(lab.entrance_index*lab.cell_size, 0);
-			character.initial_steps = character.steps = lab.path_length + steps_collection;
-			character.initial_steps = character.steps += rand() % character.steps / 2.f;
-			character.transparency = 1.0f;
-			character.fading_point = character.steps / 10.f;
-
 			GLuint LevelComplete = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/level complete.gif");
 			level_complete_sprite = current_sprite;
-			sprites[current_sprite++].init(LevelComplete, sprites[exit_sprite].get_position().x(), sprites[exit_sprite].get_position().y(), 2 * camera_initial_distance, 2 * camera_initial_distance);
+			//sprites[current_sprite++].init(LevelComplete, sprites[exit_sprite].get_position().x(), sprites[exit_sprite].get_position().y(), 2 * camera_initial_distance, 2 * camera_initial_distance);
+			sprites[current_sprite++].init(LevelComplete, lab.half_size, lab.half_size, 2 * camera_initial_distance, 2 * camera_initial_distance);
 			sprites[level_complete_sprite].is_enabled() = false;
 
 			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/game over.gif");
 			game_over_sprite = current_sprite;
-			sprites[current_sprite++].init(GameOver, sprites[exit_sprite].get_position().x(), sprites[exit_sprite].get_position().y(), 2 * camera_initial_distance, 2 * camera_initial_distance);
+			//sprites[current_sprite++].init(GameOver, sprites[exit_sprite].get_position().x(), sprites[exit_sprite].get_position().y(), 2 * camera_initial_distance, 2 * camera_initial_distance);
+			sprites[current_sprite++].init(GameOver, lab.half_size, lab.half_size, 2 * camera_initial_distance, 2 * camera_initial_distance);
 			sprites[game_over_sprite].is_enabled() = false;
 		}
 
@@ -438,7 +538,7 @@ namespace octet {
 						sprites[current_sprite++].init(wall, j*lab.cell_size + lab.half_cell, i*lab.cell_size, lab.cell_size + wall_width, wall_width);
 
 					if (lab.cells[i][j].distance > 0)
-						distant_cells.push_back(lab.cells[i][j]);
+						content_cells.push_back(lab.cells[i][j]);
 						
 				}
 
@@ -447,58 +547,105 @@ namespace octet {
 			sprites[current_sprite++].init(border, lab.half_size, lab.absolute_size, lab.absolute_size + border_width, border_width);
 			sprites[current_sprite++].init(border, 0, lab.half_size, border_width, lab.absolute_size + border_width);
 			sprites[current_sprite++].init(border, lab.absolute_size, lab.half_size, border_width, lab.absolute_size + border_width);
-			
-			add_labyrinth_content(lab.cell_size - border_width - wall_width);
 		}
 
-		void add_labyrinth_content(float cell_size)
+		void add_labyrinth_content(float cell_size, int steps_pool)
 		{
+			character.x = lab.entrance_index;
+			character.y = 0;
+			character.actual_position = vec2(lab.entrance_index*lab.cell_size, 0);
+			character.initial_steps = character.steps = 0.7f*lab.path_length + steps_pool;
+			character.initial_steps = character.steps += rand() % character.steps / 2.f;
+			character.transparency = 1.0f;
+			character.fading_point = character.steps / 10.f;
+			steps_alteration = none;
+			steps_alteration_duration = 0;
+			bonus_value = character.initial_steps / 2;
+			scary_face_timeout = 0;
+			scary_image_sprite = -1;
+			previous_scary_face_time_interval = 10000;
+
+			std::sort(content_cells.begin(), content_cells.end());
+			
+			int exits_number = 3,
+				soul_shards = 4,
+				stop_index = std::max((int)content_cells.size() - (exits_number + soul_shards), 0);
+
+		
+			//exits
 			GLuint exit_staircase = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/staircase.gif");
-			GLuint soul_loot = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/loot.gif");
-
-			//exit
 			exit_sprite = current_sprite;
-			sprites[current_sprite++].init(exit_staircase, lab.exit.x()*lab.cell_size + lab.half_cell, lab.exit.y()*lab.cell_size + lab.half_cell,
-				cell_size, cell_size);
+			int true_exit = rand() % exits_number + 1;
+			for (int i = 1; i <= exits_number; i++)
+			{
+				content_cells[content_cells.size() - i].sprite_index = current_sprite;
 
-			std::sort(distant_cells.begin(), distant_cells.end());
-			for (int i = distant_cells.size() - 2; i >= distant_cells.size() - 5; i--)
-				sprites[current_sprite++].init(soul_loot, distant_cells[i].x*lab.cell_size + lab.half_cell, distant_cells[i].y*lab.cell_size + lab.half_cell,
+				sprites[current_sprite++].init(exit_staircase, content_cells[content_cells.size() - i].x*lab.cell_size + lab.half_cell,
+					content_cells[content_cells.size() - i].y*lab.cell_size + lab.half_cell, cell_size, cell_size);
+				//true or fake?
+				if (i == true_exit)
+					content_cells[content_cells.size() - i].loot = exit;
+				else
+					content_cells[content_cells.size() - i].loot = fake_exit;
+			}
+
+			for (int i = content_cells.size() - exits_number - 1; i >= stop_index; i--)
+			{
+				GLuint soul_loot;
+				int type = rand() % 2;
+				switch (type)
+				{
+					//blue (add)
+					case 0:
+						soul_loot = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/blue soul.gif");
+						content_cells[i].loot = bonus;
+						break;
+					//violet (x2)
+					case 1:
+						soul_loot = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/violet soul.gif");
+						content_cells[i].loot = double_value;
+						break;
+				}
+				content_cells[i].sprite_index = current_sprite;
+				sprites[current_sprite++].init(soul_loot, content_cells[i].x*lab.cell_size + lab.half_cell, content_cells[i].y*lab.cell_size + lab.half_cell,
 					cell_size*0.7f, cell_size*0.7f);
+			}
 		}
 
 		void generate_new_level()
 		{
+			content_cells.clear();
+
 			current_sprite = 0;
 			draw_map(character.steps);
 
+			if (character.pointed_left)
+				sprites[character_sprite].rotateY180();
+
 			camera_path_remaining = vec3(0, 0, 0);
-			cameraToWorld.translate(sprites[character_sprite].get_position().x() - camera_position.x(), lab.absolute_size / 4.f - camera_position.y(), 0);
-			camera_position += vec2(sprites[character_sprite].get_position().x() - camera_position.x(), lab.absolute_size / 4.f - camera_position.y());
+			//cameraToWorld.translate(sprites[character_sprite].get_position().x() - camera_position.x(), lab.absolute_size / 4.f - camera_position.y(), 0);
+			//camera_position += vec2(sprites[character_sprite].get_position().x() - camera_position.x(), lab.absolute_size / 4.f - camera_position.y());
 			level_complete = false;
 
 			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#800080");
 			board_sprite = current_sprite;
 			status_bar.height = camera_initial_distance / 8.f;
-			sprites[current_sprite++].init(Board, camera_position.x(), camera_position.y() - (camera_initial_distance - status_bar.height),
+			sprites[current_sprite++].init(Board, lab.half_size, lab.absolute_size / 2.1f - (camera_initial_distance - status_bar.height),
 				1.9f * camera_initial_distance, status_bar.height);
+			//sprites[current_sprite++].init(Board, camera_position.x(), camera_position.y() - (camera_initial_distance - status_bar.height),
+			//	1.9f * camera_initial_distance, status_bar.height);
 		}
 
 #pragma endregion
 
 	public:
 
+		//ToDo: when your soul is low - all doubles become bonuses
+
 		// this is called when we construct the class
 		labyrinth_app(int argc, char **argv) : app(argc, argv), font(512, 256, "assets/big.fnt") {
 		}
 
-		//create new sprite
-
-		//void new_sprite(GLuint texture, int x, int y, int w, int h)
-		//{			
-		//	//sprite s(texture, x, y, w, h);
-		//	sprites.push_back(sprite(texture,x,y,w,h));
-		//}
 
 		// this is called once OpenGL is initialized
 		void app_init() {
@@ -543,7 +690,7 @@ namespace octet {
 			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#800080");
 			board_sprite = current_sprite;
 			status_bar.height = camera_initial_distance / 8.f;
-			sprites[current_sprite++].init(Board, sprites[character_sprite].get_position().x(), lab.absolute_size / 6.f - (camera_initial_distance - status_bar.height),
+			sprites[current_sprite++].init(Board, lab.half_size, lab.absolute_size / 2.1f - (camera_initial_distance - status_bar.height),
 				1.9f * camera_initial_distance, status_bar.height);
 			sprites[board_sprite].is_enabled() = true;
 		}
@@ -571,13 +718,36 @@ namespace octet {
 				sprites[i].render(texture_shader_, cameraToWorld);
 			}
 			
-			if (!game_over)
+			if (!game_over && scary_face_timeout == 0)
 			{
-				char steps[32];// = "Steps:" + character.steps;
+				char steps[32];
 				sprintf(steps, "Steps:%d", character.steps);
-				draw_text(texture_shader_, camera_position.x() - 0.55f*camera_initial_distance,
-					camera_position.y() - 1.15f*camera_initial_distance,
-					1.f / 16, steps);
+
+				//draw_text(texture_shader_, camera_position.x() - 0.55f*camera_initial_distance,
+				//	camera_position.y() - 1.15f*camera_initial_distance,
+				//	1.f / 16, steps);
+				draw_text(texture_shader_, lab.half_size/3.f, lab.absolute_size / 3.2f - (camera_initial_distance - status_bar.height), 1.f / 8, steps);
+
+				if (steps_alteration_duration != 0)
+				{
+					char bonus_message[40];
+					steps_alteration_duration--;
+					switch (steps_alteration)
+					{
+					case double_value:
+						sprintf(bonus_message, "Soul has been doubled!");
+						break;
+					case bonus:
+						sprintf(bonus_message, "+%d bonus received",bonus_value);
+						break;
+					case fake_exit:
+						sprintf(bonus_message, "It's a trap! -%d soul essence",bonus_value);
+						break;
+					default:
+						break;
+					}
+					draw_text(texture_shader_, lab.half_size , lab.absolute_size / 3.2f - (camera_initial_distance - status_bar.height), 1.f / 8, bonus_message);
+				}
 			}
 
 			// move the listener with the camera
@@ -605,25 +775,32 @@ namespace octet {
 			}
 			else
 			{
+				previous_scary_face_time_interval++;
 				move_player();
 
-				move_camera();
-
-				//check end
-				if ((character.x == (int)lab.exit.x()) && (character.y == (int)lab.exit.y()))
+				if (blinking_sprites != 0)
 				{
-					//cameraToWorld.translate(camera_path_remaining.x(), camera_path_remaining.y(), 0);
-					//camera_position += camera_path_remaining;
-					sprites[board_sprite].is_enabled() = false;
-
-					level_complete = true;
-
-					int old_x = sprites[level_complete_sprite].get_position().x(),
-						old_y = sprites[level_complete_sprite].get_position().y();
-
-					sprites[level_complete_sprite].translate(camera_position.x() - old_x, camera_position.y() - old_y);
-					sprites[level_complete_sprite].is_enabled() = true;
+					for (int i = 0; i<content_cells.size(); i++)
+					{
+						if (content_cells[i].blinking_time != 0)
+						{
+							content_cells[i].blinking_time--;
+							if (content_cells[i].blinking_time == 0)
+							{
+								sprites[content_cells[i].sprite_index].change_texture(resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/staircase.gif"));
+								blinking_sprites--;
+							}
+						}
+					}
 				}
+				if (scary_face_timeout != 0)
+				{
+					scary_face_timeout--;
+					if (scary_face_timeout == 0)
+						sprites[scary_image_sprite].is_enabled() = false;
+				}
+				//move_camera();
+
 			}
 		}
 	};
