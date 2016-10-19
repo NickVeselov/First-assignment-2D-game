@@ -290,7 +290,6 @@ namespace octet {
 
 			if (!character_moving)
 			{
-				const float movespeed = lab.cell_size;
 				int x = character.x,
 					y = character.y;
 
@@ -302,8 +301,10 @@ namespace octet {
 							sprites[character_sprite].rotateY180();
 							character.pointed_left = true;
 						}
-						sprites[character_sprite].translate(+movespeed, 0);
+						character.moving_direction = left;
 						character.x--;
+
+						check_collision();
 					}
 				}
 				else if ((is_key_down(key_right)) && (character.x < lab.cells_number)) {
@@ -314,21 +315,21 @@ namespace octet {
 							sprites[character_sprite].rotateY180();
 							character.pointed_left = false;
 						}
-						sprites[character_sprite].translate(+movespeed, 0);
+						character.moving_direction = right;
 						character.x++;
 					}
 				}
 				else if ((is_key_down(key_up)) && (character.y < lab.cells_number)) {
 					if (!lab.cells[character.y][character.x].top_wall)
 					{
-						sprites[character_sprite].translate(0, +movespeed);
+						character.moving_direction = top;
 						character.y++;
 					}
 				}
 				else if ((is_key_down(key_down)) && (character.y > 0)) {
 					if (!lab.cells[character.y][character.x].bottom_wall)
 					{
-						sprites[character_sprite].translate(0, -movespeed);
+						character.moving_direction = bottom;
 						character.y--;
 					}
 				}
@@ -336,21 +337,42 @@ namespace octet {
 				//if movement occured
 				if (character.x != x || character.y != y)
 				{
+					character.distance_left_to_move = lab.cell_size;
 					camera_path_remaining += vec3((character.x - x)*character.speed, (character.y - y)*character.speed, 0);
-					character.actual_position += vec2((character.x - x)*character.speed, (character.y - y)*character.speed);
 					character_moving = true;
 					character.steps--;
 					//check for looting/escaping
 					check_collision();
 				}
 			}
-			else
+
+			if (character_moving)
 			{
-				movement_frames_counter++;
-				if (movement_frames_counter == movement_frames_threshold)
+				if (character.distance_left_to_move > 0)
+				{
+					switch (character.moving_direction)
+					{
+					case left:
+						sprites[character_sprite].translate(+character.speed, 0);
+						break;
+					case right:
+						sprites[character_sprite].translate(+character.speed, 0);
+						break;
+					case top:
+						sprites[character_sprite].translate(0, +character.speed);
+						break;
+					case bottom:
+						sprites[character_sprite].translate(0, -character.speed);
+						break;
+					default:
+						break;
+					}
+					character.distance_left_to_move -= character.speed;
+				}
+				else
 				{
 					character_moving = false;
-					movement_frames_counter = 0;
+					character.distance_left_to_move = 0;
 				}
 			}
 			
@@ -396,7 +418,7 @@ namespace octet {
 			//show scary face sometimes for suspense
 			int rand_scary_face = rand() % 100;
 			if (rand_scary_face == 0)
-				show_evil_face(5);
+				show_evil_face(5 + 2.f*character.initial_steps / character.steps);
 
 			for (int i = 0; i < content_cells.size(); i++)
 			{
@@ -557,6 +579,7 @@ namespace octet {
 			character.initial_steps = character.steps = 0.7f*lab.path_length + steps_pool;
 			character.initial_steps = character.steps += rand() % character.steps / 2.f;
 			character.transparency = 1.0f;
+			character.speed = lab.cell_size / 6.f;
 			character.fading_point = character.steps / 10.f;
 			steps_alteration = none;
 			steps_alteration_duration = 0;
@@ -593,6 +616,16 @@ namespace octet {
 			{
 				GLuint soul_loot;
 				int type = rand() % 2;
+				content_cells[i].bouncing = true;
+				content_cells[i].bounce_max_value = cell_size / 20;
+				int r = rand() % 2 * content_cells[i].bounce_max_value;
+				content_cells[i].current_bounce_position = -content_cells[i].current_bounce_position + r;
+				r = rand() % 2;
+				if (r == 0)
+					content_cells[i].direction = true;
+				else
+					content_cells[i].direction = false;
+
 				switch (type)
 				{
 					//blue (add)
@@ -636,7 +669,38 @@ namespace octet {
 			//	1.9f * camera_initial_distance, status_bar.height);
 		}
 
+		void animate_pickups()
+		{
+			for (int i = 0; i < content_cells.size(); i++)
+			{
+				if (content_cells[i].bouncing)
+				{
+					float current = content_cells[i].current_bounce_position,
+						max_pos = content_cells[i].bounce_max_value;
+					if (content_cells[i].direction)
+					{
+						content_cells[i].current_bounce_position += max_pos / 10;
+						sprites[content_cells[i].sprite_index].translate(0, +max_pos / 10);
+					}
+					else
+					{
+						content_cells[i].current_bounce_position -= max_pos / 10;
+						sprites[content_cells[i].sprite_index].translate(0, -max_pos / 10);
+					}
+
+					//change direction
+					if (abs(content_cells[i].current_bounce_position) >= content_cells[i].bounce_max_value)
+					{
+						if (content_cells[i].direction)
+							content_cells[i].direction = false;
+						else
+							content_cells[i].direction = true;
+					}
+				}
+			}
+		}
 #pragma endregion
+
 
 	public:
 
@@ -684,7 +748,6 @@ namespace octet {
 
 			game_over = false;
 			level_complete = false;
-			character.speed = lab.cell_size;
 			score = 0;
 
 			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#800080");
@@ -800,6 +863,8 @@ namespace octet {
 						sprites[scary_image_sprite].is_enabled() = false;
 				}
 				//move_camera();
+
+				animate_pickups();
 
 			}
 		}

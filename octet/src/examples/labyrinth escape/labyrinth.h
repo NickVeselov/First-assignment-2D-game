@@ -3,14 +3,18 @@
 #pragma once
 
 namespace octet {
+	
+	enum direction { left, right, top, bottom };
 
 	struct character
 	{
 		int x;
 		int y;
-		int speed;
+		//movement
+		float distance_left_to_move;
+		float speed;
 		bool pointed_left = false;
-
+		direction moving_direction;
 		vec2 actual_position;
 
 		int steps;
@@ -46,7 +50,15 @@ namespace octet {
 		int distance;
 		Loot loot = none;
 		int sprite_index;
+
+		//blinking (for stairs)
 		int blinking_time;
+
+		//bouncing
+		bool bouncing;
+		float bounce_max_value;
+		float current_bounce_position;
+		bool direction;
 		Cell() 
 		{
 
@@ -62,6 +74,7 @@ namespace octet {
 			blinking_time = 0;
 			loot = none;
 			sprite_index = -1;
+			bouncing = false;
 		}
 		Cell(int X, int Y)
 		{
