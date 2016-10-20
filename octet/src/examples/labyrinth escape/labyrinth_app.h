@@ -27,6 +27,8 @@ namespace octet {
 		// true if this sprite is enabled.
 		bool enabled;
 
+
+
 		//position
 		int x;
 		int y;
@@ -34,6 +36,8 @@ namespace octet {
 	public:
 
 		float transparency;
+		//static
+		bool static_position;
 
 		sprite() {
 			texture = 0;
@@ -62,6 +66,7 @@ namespace octet {
 			transparency = 1.0f;
 			x = x0;
 			y = y0;
+			static_position = false;
 		}
 
 		void change_texture(int _texture)
@@ -75,7 +80,11 @@ namespace octet {
 
 			// build a projection matrix: model -> world -> camera -> projection
 			// the projection space is the cube -1 <= x/w, y/w, z/w <= 1
-			mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
+			mat4t modelToProjection;
+			if (static_position)
+				modelToProjection = modelToWorld;
+			else
+				modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
 
 			// set up opengl to draw textured triangles using sampler 0 (GL_TEXTURE0)
 			glActiveTexture(GL_TEXTURE0);
@@ -269,20 +278,15 @@ namespace octet {
 
 				cameraToWorld.translate(camera_speed.x(), camera_speed.y(), camera_speed.z());
 				camera_position += vec2(camera_speed.x(), camera_speed.y());
-				sprites[board_sprite].translate(camera_speed.x(), camera_speed.y());
 				camera_path_remaining -= camera_speed;
 			}
 
 			//Z movement and character transparency - disabled
-			//if ((character.initial_steps - character.steps) / character.fading_point > (1 - character.transparency)/0.1f + 1)
-			//{
-			//	camera_path_remaining.z() = (camera_max_distance - camera_initial_distance)*0.1f;
-			//	character.transparency -= 0.1f;
-
-			//	sprites[board_sprite].translate(0, -camera_path_remaining.z()/1.1f);
-			//	//sprites[board_sprite].resize(camera_path_remaining.z() * 1.41f / , camera_path_remaining.z() / 1.41f);
-			//	//sprites[board_sprite]
-			//}
+			if ((character.initial_steps - character.steps) / character.fading_point > (1 - character.transparency)/0.1f + 1)
+			{
+				camera_path_remaining.z() = (camera_max_distance - camera_initial_distance)*0.1f;
+				character.transparency -= 0.1f;
+			}
 		}
 		
 		// use the keyboard to move the character
@@ -384,7 +388,7 @@ namespace octet {
 			modelToWorld.loadIdentity();
 			modelToWorld.translate(x, y, 0);
 			modelToWorld.scale(scale, scale, 1);
-			mat4t modelToProjection = mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
+			mat4t modelToProjection = modelToWorld;//mat4t::build_projection_matrix(modelToWorld, cameraToWorld);
 
 			/*mat4t tmp;
 			glLoadIdentity();
@@ -418,7 +422,7 @@ namespace octet {
 			//show scary face sometimes for suspense
 			int rand_scary_face = rand() % 100;
 			if (rand_scary_face == 0)
-				show_evil_face(5 + 2.f*character.initial_steps / character.steps);
+				show_evil_face(3 + 2.f*character.initial_steps / character.steps);
 
 			for (int i = 0; i < content_cells.size(); i++)
 			{
@@ -493,7 +497,8 @@ namespace octet {
 				{
 					GLint evil_face = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/evil ghost.gif");
 					scary_image_sprite = current_sprite;
-					sprites[current_sprite++].init(evil_face, lab.half_size, lab.half_size, 2 * camera_initial_distance, 2 * camera_initial_distance);
+					sprites[current_sprite++].init(evil_face, 0, 0, 1.8f, 1.8f);
+					sprites[scary_image_sprite].static_position = true;
 				}
 				else
 					sprites[scary_image_sprite].is_enabled() = true;
@@ -581,6 +586,8 @@ namespace octet {
 			character.transparency = 1.0f;
 			character.speed = lab.cell_size / 6.f;
 			character.fading_point = character.steps / 10.f;
+			character.distance_left_to_move = 0;
+
 			steps_alteration = none;
 			steps_alteration_duration = 0;
 			bonus_value = character.initial_steps / 2;
@@ -656,15 +663,18 @@ namespace octet {
 				sprites[character_sprite].rotateY180();
 
 			camera_path_remaining = vec3(0, 0, 0);
+
 			//cameraToWorld.translate(sprites[character_sprite].get_position().x() - camera_position.x(), lab.absolute_size / 4.f - camera_position.y(), 0);
 			//camera_position += vec2(sprites[character_sprite].get_position().x() - camera_position.x(), lab.absolute_size / 4.f - camera_position.y());
 			level_complete = false;
 
-			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#800080");
-			board_sprite = current_sprite;
-			status_bar.height = camera_initial_distance / 8.f;
-			sprites[current_sprite++].init(Board, lab.half_size, lab.absolute_size / 2.1f - (camera_initial_distance - status_bar.height),
-				1.9f * camera_initial_distance, status_bar.height);
+			//GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#800080");
+			//board_sprite = current_sprite;
+			//status_bar.height = camera_initial_distance / 8.f;
+			////sprites[current_sprite++].init(Board, lab.half_size, lab.absolute_size / 2.1f - (camera_initial_distance - status_bar.height),
+			////	1.9f * camera_initial_distance, status_bar.height);
+			//sprites[current_sprite++].init(Board, lab.half_size, lab.half_size, 100, 100);
+			//sprites[board_sprite].static_position = true;
 			//sprites[current_sprite++].init(Board, camera_position.x(), camera_position.y() - (camera_initial_distance - status_bar.height),
 			//	1.9f * camera_initial_distance, status_bar.height);
 		}
@@ -699,6 +709,7 @@ namespace octet {
 				}
 			}
 		}
+
 #pragma endregion
 
 
@@ -733,8 +744,7 @@ namespace octet {
 			draw_map(0);
 
 			//center camera on the character
-			//camera_position = vec2(sprites[character_sprite].get_position().x(), lab.absolute_size / 6.f);
-			camera_position = vec2(lab.half_size, lab.half_size);
+			camera_position = vec2(sprites[character_sprite].get_position().x(), lab.absolute_size / 6.f);
 			cameraToWorld.translate(camera_position.x(),camera_position.y(), camera_initial_distance);
 			//cameraToWorld.translate(lab.half_size, lab.half_size, camera_initial_distance);
 
@@ -753,8 +763,10 @@ namespace octet {
 			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#800080");
 			board_sprite = current_sprite;
 			status_bar.height = camera_initial_distance / 8.f;
-			sprites[current_sprite++].init(Board, lab.half_size, lab.absolute_size / 2.1f - (camera_initial_distance - status_bar.height),
-				1.9f * camera_initial_distance, status_bar.height);
+			//sprites[current_sprite++].init(Board, lab.half_size, lab.absolute_size / 2.1f - (camera_initial_distance - status_bar.height),
+			//	1.9f * camera_initial_distance, status_bar.height);
+			sprites[current_sprite++].init(Board, 0, -0.8f, 1.8f , 0.2f);
+			sprites[board_sprite].static_position = true;
 			sprites[board_sprite].is_enabled() = true;
 		}
 		
@@ -789,8 +801,7 @@ namespace octet {
 				//draw_text(texture_shader_, camera_position.x() - 0.55f*camera_initial_distance,
 				//	camera_position.y() - 1.15f*camera_initial_distance,
 				//	1.f / 16, steps);
-				draw_text(texture_shader_, lab.half_size/3.f, lab.absolute_size / 3.2f - (camera_initial_distance - status_bar.height), 1.f / 8, steps);
-
+				draw_text(texture_shader_, -0.32f, -1.21f, 1.f / 512, steps);
 				if (steps_alteration_duration != 0)
 				{
 					char bonus_message[40];
@@ -809,7 +820,7 @@ namespace octet {
 					default:
 						break;
 					}
-					draw_text(texture_shader_, lab.half_size , lab.absolute_size / 3.2f - (camera_initial_distance - status_bar.height), 1.f / 8, bonus_message);
+					draw_text(texture_shader_, 0.4f, -1.21f, 1.f / 512, bonus_message);
 				}
 			}
 
@@ -862,7 +873,8 @@ namespace octet {
 					if (scary_face_timeout == 0)
 						sprites[scary_image_sprite].is_enabled() = false;
 				}
-				//move_camera();
+				
+				move_camera();
 
 				animate_pickups();
 
