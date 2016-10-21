@@ -15,28 +15,28 @@ d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\l
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(76): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(105): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(107): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(170): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(171): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(182): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(183): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(287): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(293): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(411): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(414): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(417): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(420): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(438): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(439): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(464): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(481): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(504): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(601): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(651): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(653): warning C4018: '<': signed/unsigned mismatch
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(748): warning C4018: '<': signed/unsigned mismatch
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(781): warning C4018: '<': signed/unsigned mismatch
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(938): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(939): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(175): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(176): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(187): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(188): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(292): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(298): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(422): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(425): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(428): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(431): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(445): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(446): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(471): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(488): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(511): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(608): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(658): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(660): warning C4018: '<': signed/unsigned mismatch
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(756): warning C4018: '<': signed/unsigned mismatch
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(789): warning C4018: '<': signed/unsigned mismatch
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(946): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(947): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(295): warning C4715: 'octet::Labyrinth::find_unvisited_cell': not all control paths return a value
   example_invaderers.vcxproj -> D:\Game development\Study\Projects\First-assignment-2D-game\octet\src\examples\labyrinth escape\Debug\labyrinth_debug.exe
   example_invaderers.vcxproj -> D:\Game development\Study\Projects\First-assignment-2D-game\octet\src\examples\labyrinth escape\Debug\labyrinth_debug.pdb (Full PDB)

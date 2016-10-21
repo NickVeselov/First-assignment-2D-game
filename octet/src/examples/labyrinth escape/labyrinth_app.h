@@ -124,6 +124,11 @@ namespace octet {
 		{
 			return cameraToWorld;
 		}
+
+		float get_z()
+		{
+			return z;
+		}
 	};
 
 	class sprite {
@@ -403,6 +408,12 @@ namespace octet {
 			GLuint wall = resource_dict::get_texture_handle(GL_RGB, "#888888");
 			GLuint void_space = resource_dict::get_texture_handle(GL_RGB, "#000000");
 
+			//outer walls
+			sprites[current_sprite++].init(border, lab.half_size, 0, lab.absolute_size + border_width, border_width);
+			sprites[current_sprite++].init(border, lab.half_size, lab.absolute_size, lab.absolute_size + border_width, border_width);
+			sprites[current_sprite++].init(border, 0, lab.half_size, border_width, lab.absolute_size + border_width);
+			sprites[current_sprite++].init(border, lab.absolute_size, lab.half_size, border_width, lab.absolute_size + border_width);
+
 			//inner walls
 			for (int i = 0; i<lab.cells_number; i++)
 				for (int j = 0; j < lab.cells_number; j++)
@@ -424,11 +435,7 @@ namespace octet {
 
 				}
 
-			//outer walls
-			sprites[current_sprite++].init(border, lab.half_size, 0, lab.absolute_size + border_width, border_width);
-			sprites[current_sprite++].init(border, lab.half_size, lab.absolute_size, lab.absolute_size + border_width, border_width);
-			sprites[current_sprite++].init(border, 0, lab.half_size, border_width, lab.absolute_size + border_width);
-			sprites[current_sprite++].init(border, lab.absolute_size, lab.half_size, border_width, lab.absolute_size + border_width);
+
 		}
 		
 		void set_variables()
@@ -719,12 +726,11 @@ namespace octet {
 
 		void handle_looting_event()
 		{
-			if (level.steps >= level.initial_steps)
-			{
-				sprites[character_sprite].transparency = 1;
-				
-				
-			}
+			float current_pos = (float)level.steps/ level.initial_steps;
+			if (current_pos > 1 )
+				current_pos = 1;
+			sprites[character_sprite].transparency = current_pos;
+			camera.translate(vec3(0, 0, current_pos*camera_init_pos - camera.get_z()));
 		}
 
 		void show_evil_face(int duration)
