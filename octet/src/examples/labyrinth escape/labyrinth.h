@@ -14,13 +14,14 @@ namespace octet {
 		float distance_left_to_move;
 		float speed;
 		bool pointed_left = false;
+		bool moving;
 		direction moving_direction;
-		vec2 actual_position;
-
-		int steps;
-		int initial_steps;
-		float transparency;
 		float fading_point;
+	};
+
+	struct GameLevel {
+		int steps = 0;
+		int initial_steps;
 	};
 
 	struct StatusBar {

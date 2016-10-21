@@ -15,7 +15,8 @@ namespace octet { namespace shaders {
 
     // index for texture sampler
     GLuint samplerIndex_;
-	GLfloat transparencyIndex_;
+    GLuint transparencyIndex_;
+ 
   public:
     void init() 
 	{
@@ -43,9 +44,10 @@ namespace octet { namespace shaders {
       const char fragment_shader[] = SHADER_STR(
         varying vec2 uv_;
         uniform sampler2D sampler;
+		uniform float transparency;
 		void main()
 		{
-			gl_FragColor = texture2D(sampler, uv_);// *vec4(1, 1, 1, transparencyIndex_);
+			gl_FragColor = texture2D(sampler, uv_) *vec4(1, 1, 1, transparency);
 		}
       );
     
@@ -56,6 +58,7 @@ namespace octet { namespace shaders {
       // extract the indices of the uniforms to use later
       modelToProjectionIndex_ = glGetUniformLocation(program(), "modelToProjection");
       samplerIndex_ = glGetUniformLocation(program(), "sampler");
+	  transparencyIndex_ = glGetUniformLocation(program(), "transparency");
     }
 
     void render(const mat4t &modelToProjection, int sampler, float transparency) {
