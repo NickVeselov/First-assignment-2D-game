@@ -89,7 +89,7 @@ namespace octet {
 				else
 					cells_to_go.y() += a_dy / cell_size;
 				//z
-				if (path_remaining.z() != 0)
+				if (path_remaining.z() < 0)
 					cells_to_go.z() = 1;
 				else
 					cells_to_go.z() = 0;
@@ -129,6 +129,16 @@ namespace octet {
 		{
 			return z;
 		}
+
+		void stop_movement()
+		{
+			path_remaining = vec3(0, 0, 0);
+		}
+
+		void go_to(float x1, float y1, float z1)
+		{
+			translate(vec3(x1 - x, y1 - y, z1 - z));
+		}
 	};
 
 	class sprite {
@@ -150,8 +160,8 @@ namespace octet {
 
 
 		//position
-		int x;
-		int y;
+		float x;
+		float y;
 		
 	public:
 
@@ -249,10 +259,13 @@ namespace octet {
 		}
 
 		// move the object
-		void translate(float x, float y) {
-			modelToWorld.translate(x, y, 0);
-			x += x;
-			y += y;
+		void translate(float X, float Y, bool inverted = false) {
+			modelToWorld.translate(X, Y, 0);
+			if (!inverted)
+				x += X;
+			else
+				x -= X;
+			y += Y;
 		}
 
 		void resize(float w, float h)
@@ -289,7 +302,6 @@ namespace octet {
 		{
 			vec2 destination = vec2(cell_size*j + cell_size/2.f, cell_size*i + cell_size/2.f);
 			translate(destination.x() - x, destination.y() - y);
-			x = destination.x(); y = destination.y();
 		}
 
 		//get the position of the sprite
@@ -366,16 +378,9 @@ namespace octet {
 			game_over = false;
 			current_sprite = 0;
 
-			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#800080");
-			board_sprite = current_sprite;
-			sprites[current_sprite++].init(Board, 0, -0.8f, 1.8f, 0.2f);
-			sprites[board_sprite].static_position = true;
-			sprites[board_sprite].is_enabled() = true;
-
 			GLuint LevelComplete = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/level complete.gif");
 			level_complete_sprite = current_sprite;
 			sprites[current_sprite++].init(LevelComplete, 0, 0, 2, 2);
-			sprites[level_complete_sprite].is_enabled() = false;
 			sprites[level_complete_sprite].static_position = true;
 
 			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/game over.gif");
@@ -384,12 +389,20 @@ namespace octet {
 			sprites[game_over_sprite].is_enabled() = false;
 			sprites[game_over_sprite].static_position = true;
 
+			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#800080");
+			board_sprite = current_sprite;
+			sprites[current_sprite++].init(Board, 0, -0.8f, 1.8f, 0.2f);
+			sprites[board_sprite].static_position = true;
+			sprites[board_sprite].is_enabled() = true;
+
 			GLuint character_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/character.gif");
 			character_sprite = current_sprite;
 			sprites[current_sprite++].init(character_texture, 0, 0,
 				lab.cell_size - border_width - wall_width, lab.cell_size - border_width - wall_width);
 
 			static_sprites_number = current_sprite;
+
+			character.speed = lab.cell_size / 3.f;
 		}
 
 	#pragma endregion
@@ -442,12 +455,12 @@ namespace octet {
 		{
 			character.x = lab.entrance_index;
 			character.y = 0;
+
 			level.initial_steps = level.steps += 0.7f*lab.path_length;
 			level.initial_steps = level.steps += rand() % level.steps / 2.f;
 
-			character.speed = lab.cell_size / 6.f;
 			character.fading_point = level.steps / 10.f;
-			
+			sprites[character_sprite].transparency = 1;
 
 			steps_alteration = none;
 			steps_alteration_duration = 0;
@@ -524,28 +537,40 @@ namespace octet {
 
 		void generate_new_level()
 		{
-			content_cells.clear();
-
-			current_sprite = static_sprites_number;
-
-			lab.construct_labyrinth();
-
-			draw_walls();
-
-			sprites[character_sprite].move_to_the_cell(0, lab.entrance_index, lab.cell_size);
-			set_variables();
-
-			add_labyrinth_content();
-
-
-			//center camera on the character
-			camera.translate(vec3(sprites[character_sprite].get_position().x(), lab.absolute_size / 6.f, 0));
-
+			level.id++;
+			sprites[level_complete_sprite].is_enabled() = false;
 			if (character.pointed_left)
+			{
 				sprites[character_sprite].rotateY180();
+				character.pointed_left = false;
+			}
 
-			level_complete = false;
-			character.moving = false;
+			for (int i = static_sprites_number; i <= current_sprite; i++)
+				sprites[i].is_enabled() = false;
+			current_sprite = static_sprites_number;
+			if (1 == 1)
+			{
+				content_cells.clear();
+				lab.construct_labyrinth();
+				draw_walls();
+
+				if (level.id == 2)
+					level.id = 2;
+				vec2 pos = sprites[character_sprite].get_position();
+				sprites[character_sprite].move_to_the_cell(0, lab.entrance_index, lab.cell_size);
+				pos = sprites[character_sprite].get_position();
+
+				set_variables();
+
+				add_labyrinth_content();
+
+				//center camera on the character
+				camera.stop_movement();
+				camera.go_to(sprites[character_sprite].get_position().x(), sprites[character_sprite].get_position().y(), camera_init_pos);
+
+				level_complete = false;
+				character.moving = false;
+			}
 		}
 
 	#pragma endregion
@@ -570,8 +595,6 @@ namespace octet {
 						}
 						character.moving_direction = left;
 						character.x--;
-
-						check_collision();
 					}
 				}
 				else if ((is_key_down(key_right)) && (character.x < lab.cells_number)) {
@@ -616,25 +639,28 @@ namespace octet {
 		
 		// use the keyboard to move the character
 		void move_character() {
+
 			set_character_translation();
 
 			if (character.moving)
 			{
+				vec2 pos = sprites[character_sprite].get_position();
 				if (character.distance_left_to_move > 0)
 				{
+					float translation = std::min(character.speed, character.distance_left_to_move);
 					switch (character.moving_direction)
 					{
 					case left:
-						sprites[character_sprite].translate(+character.speed, 0);
+						sprites[character_sprite].translate(+translation, 0,true);
 						break;
 					case right:
-						sprites[character_sprite].translate(+character.speed, 0);
+						sprites[character_sprite].translate(+translation, 0);
 						break;
 					case top:
-						sprites[character_sprite].translate(0, +character.speed);
+						sprites[character_sprite].translate(0, +translation);
 						break;
 					case bottom:
-						sprites[character_sprite].translate(0, -character.speed);
+						sprites[character_sprite].translate(0, -translation);
 						break;
 					default:
 						break;
@@ -645,6 +671,7 @@ namespace octet {
 				{
 					character.moving = false;
 					character.distance_left_to_move = 0;
+					pos = sprites[character_sprite].get_position();
 				}
 			}
 		}
@@ -691,16 +718,10 @@ namespace octet {
 						show_evil_face(30);
 						break;
 					case exit:
-						sprites[character_sprite].is_enabled() = false;
 						//	//cameraToWorld.translate(camera_path_remaining.x(), camera_path_remaining.y(), 0);
 						//	//camera_position += camera_path_remaining;
 						sprites[board_sprite].is_enabled() = false;
 						level_complete = true;
-
-						//	int old_x = sprites[level_complete_sprite].get_position().x(),
-						//		old_y = sprites[level_complete_sprite].get_position().y();
-
-						//	sprites[level_complete_sprite].translate(camera_position.x() - old_x, camera_position.y() - old_y);
 						sprites[level_complete_sprite].is_enabled() = true;
 						break;
 					default:
@@ -863,7 +884,7 @@ namespace octet {
 
 
 			camera.init(0, 0, camera_init_pos, camera_fin_pos,
-				lab.cell_size / 40.f, lab.cell_size / 40.f, (camera_fin_pos - camera_init_pos) / 40.f, lab.cell_size);
+				lab.cell_size / 120.f, lab.cell_size / 120.f, (camera_fin_pos - camera_init_pos) / 120.f, lab.cell_size);
 			font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
 
 			game_initialization();
@@ -950,13 +971,19 @@ namespace octet {
 				sprites[game_over_sprite].is_enabled() = true;
 				game_over = true;
 			}
-			else if (level_complete) 
+			else if (level_complete)
 			{
 				if (is_key_down(key_enter))
 					generate_new_level();
 			}
 			else
 			{
+				if (is_key_down(key_enter) && (!character.moving))
+				{
+					generate_new_level();
+				}
+
+
 				previous_scary_face_time_interval++;
 
 				move_character();

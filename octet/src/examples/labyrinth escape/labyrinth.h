@@ -22,6 +22,8 @@ namespace octet {
 	struct GameLevel {
 		int steps = 0;
 		int initial_steps;
+
+		int id = 0;
 	};
 
 	struct StatusBar {
