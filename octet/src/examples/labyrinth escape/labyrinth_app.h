@@ -20,11 +20,49 @@ namespace octet {
 		vec3 initial_position;
 		vec3 path_remaining;		
 		vec3 basic_speed;
+		vec3 current_speed;
 
 		float min_distance;
 		bool moving;
-
 		int cell_size;
+
+		float d1_shift(float path, float speed, bool horizontal)
+		{
+			float abs = std::abs(path);
+			int cells_to_go = 1;
+						
+			if (horizontal)
+			{
+				//if camera has to pass multiple cells - accelerate
+				if (abs > cell_size)
+					cells_to_go = pow(2.f, abs / cell_size - 1);
+			}
+			//vertical movement
+			else if (abs == 0)
+				cells_to_go = 0;
+			
+			//increase speed
+			float adjusted_speed = speed*cells_to_go;
+
+			//if the distance remaining is lesser than one movement step
+			if (abs < adjusted_speed)
+				adjusted_speed = abs;
+
+			//set movement direction
+			if (path < 0)
+				adjusted_speed *= -1;
+
+			return (adjusted_speed);
+		}
+
+		void adjust_speed()
+		{ 
+			//	1/8 screen per 1 sec 0.2 - 0.6; 0.3; 0.75
+			float current = (z - min_distance) / (initial_position.z() - min_distance), //4 - 14; 14/10 = 1.4;
+				modifier = 18 * (current - 0.1);
+
+			current_speed.x() = current_speed.y() = (2.f*z) / (modifier * 30);
+		}
 	public:		
 
 		void init( float X, float Y, float Z, float Min_distance, float Vx, float Vy, float Vz, int Cell_size)
@@ -39,6 +77,7 @@ namespace octet {
 			min_distance = Min_distance;
 			path_remaining = vec3(0, 0, 0);
 			basic_speed = vec3(Vx, Vy, Vz);
+			current_speed = basic_speed;
 			moving = false;
 			cell_size = Cell_size;
 		}
@@ -58,6 +97,8 @@ namespace octet {
 			y += dv.y();
 			z += dv.z();
 			cameraToWorld.translate(dv.x(), dv.y(), dv.z());
+
+			adjust_speed();
 		}
 
 		bool is_moving()
@@ -67,56 +108,21 @@ namespace octet {
 
 		void move()
 		{
-			if (path_remaining.x() != 0 || path_remaining.y() != 0 || path_remaining.z() != 0)
+			vec3 translation = vec3(0, 0, 0);
+			if (path_remaining.x() != 0)
+				translation.x() = d1_shift(path_remaining.x(), current_speed.x(), true);
+			if (path_remaining.y() != 0)
+				translation.y() = d1_shift(path_remaining.y(), current_speed.y(), true);
+			if (path_remaining.z() != 0)
+				translation.z() = d1_shift(path_remaining.z(), current_speed.z(), false);
+
+			if (translation.x() != 0 || translation.y() != 0 || translation.z() != 0)
 			{
-				float a_dx = abs(path_remaining.x()),
-					a_dy = abs(path_remaining.y());
-
-				vec3 adjusted_speed = vec3(0, 0, 0);
-				vec3 cells_to_go = vec3(0, 0, 0);
-
-				//x
-				if (a_dx > 0 && a_dx <= cell_size)
-					cells_to_go.x()++;
-				else
-					cells_to_go.x() += a_dx / cell_size;
-				//y
-				if (a_dy > 0 && a_dy <= cell_size)
-					cells_to_go.y()++;
-				else
-					cells_to_go.y() += a_dy / cell_size;
-				//z
-				if (path_remaining.z() < 0)
-					cells_to_go.z() = 1;
-				else
-					cells_to_go.z() = 0;
-
-				if (cells_to_go.x() != 0)
-					cells_to_go.x() = pow(2.f, cells_to_go.x() - 1);
-				if (cells_to_go.y() != 0)
-					cells_to_go.y() = pow(2.f, cells_to_go.y() - 1);
-
-				adjusted_speed += basic_speed*cells_to_go;
-
-				//if (adju)
-
-				if (a_dx < adjusted_speed.x())
-					adjusted_speed.x() = a_dx;
-				if (a_dy < adjusted_speed.y())
-					adjusted_speed.y() = a_dy;
-
-				if (path_remaining.x() < 0)
-					adjusted_speed.x() *= -1;
-				if (path_remaining.y() < 0)
-					adjusted_speed.y() *= -1;
-
-				translate(adjusted_speed);
-				path_remaining -= adjusted_speed;
+				translate(translation);
+				path_remaining -= translation;
 			}
 			else
-			{
 				moving = false;
-			}
 		}
 
 		mat4t get_camera()
@@ -368,6 +374,11 @@ namespace octet {
 		
 	//for the game in general
 	#pragma region once-initialization
+		
+		float border_width = 1;
+		float wall_width = 0.4f;
+		float camera_init_pos = lab.absolute_size*0.4f;
+		float camera_fin_pos = lab.absolute_size*0.2f;
 
 		void game_initialization()
 		{
@@ -398,18 +409,13 @@ namespace octet {
 
 			static_sprites_number = current_sprite;
 
-			character.speed = lab.cell_size / 3.f;
+			character.speed = lab.cell_size / 6.f;
 		}
 
 	#pragma endregion
 
 	//for every level
 	#pragma region initialization-loop 
-
-		float border_width = 1;
-		float wall_width = 0.4f;
-		float camera_init_pos = lab.absolute_size*0.5f;
-		float camera_fin_pos = lab.absolute_size*0.2f;
 
 		void draw_walls()
 		{
@@ -744,7 +750,8 @@ namespace octet {
 			if (current_pos > 1 )
 				current_pos = 1;
 			sprites[character_sprite].transparency = current_pos;
-			camera.translate(vec3(0, 0, current_pos*camera_init_pos - camera.get_z()));
+			//1 - 9; 3 = 0.25; 1 + 0.25*(8) = 1 + 0.75*8 = 7;
+			camera.translate(vec3(0, 0, camera_fin_pos + current_pos*(camera_init_pos - camera_fin_pos) - camera.get_z()));
 		}
 
 		void show_evil_face(int duration)
@@ -875,9 +882,9 @@ namespace octet {
 			// set up the shader
 			texture_shader_.init();
 
-
+			//ToDo: the horizontal speed should be relative to camera distance
 			camera.init(0, 0, camera_init_pos, camera_fin_pos,
-				lab.cell_size / 120.f, lab.cell_size / 120.f, (camera_fin_pos - camera_init_pos) / 120.f, lab.cell_size);
+				lab.cell_size / 120.f, lab.cell_size / 120.f, (camera_init_pos - camera_fin_pos) / 240.f, lab.cell_size);
 			font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
 
 			game_initialization();
@@ -971,7 +978,7 @@ namespace octet {
 			}
 			else
 			{
-				if (is_key_down(key_enter) && (!character.moving))
+				if (is_key_down(key_enter))
 				{
 					generate_new_level();
 				}
