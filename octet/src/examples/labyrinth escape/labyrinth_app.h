@@ -402,6 +402,13 @@ namespace octet {
 			sprites[board_sprite].static_position = true;
 			sprites[board_sprite].is_enabled() = true;
 
+			GLint evil_face = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/evil ghost.gif");
+			scary_image_sprite = current_sprite;
+			sprites[current_sprite++].init(evil_face, 0, 0, 2.f, 2.f);
+			sprites[scary_image_sprite].static_position = true;
+			sprites[scary_image_sprite].is_enabled() = false;
+			sprites[scary_image_sprite].transparency = 0.5f;
+
 			GLuint character_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/character.gif");
 			character_sprite = current_sprite;
 			sprites[current_sprite++].init(character_texture, 0, 0,
@@ -468,7 +475,6 @@ namespace octet {
 			steps_alteration_duration = 0;
 			bonus_value = level.initial_steps / 2;
 			scary_face_timeout = 0;
-			scary_image_sprite = -1;
 			previous_scary_face_time_interval = 10000;
 		}
 
@@ -541,35 +547,35 @@ namespace octet {
 		{
 			level.id++;
 			sprites[level_complete_sprite].is_enabled() = false;
+			//turn character
 			if (character.pointed_left)
 			{
 				sprites[character_sprite].rotateY180();
 				character.pointed_left = false;
 			}
 
+			//disable sprites
 			for (int i = static_sprites_number; i <= current_sprite; i++)
 				sprites[i].is_enabled() = false;
 			current_sprite = static_sprites_number;
-			if (1 == 1)
-			{
-				content_cells.clear();
-				lab.construct_labyrinth();
-				draw_walls();
 
-				sprites[character_sprite].move_to_the_cell(0, lab.entrance_index, lab.cell_size);
+			//reconstruct labyrinth
+			content_cells.clear();
+			lab.construct_labyrinth();
+			draw_walls();
 
-				set_variables();
+			//move character to the entrance
+			sprites[character_sprite].move_to_the_cell(0, lab.entrance_index, lab.cell_size);
 
-				add_labyrinth_content();
+			set_variables();
 
-				//center camera on the character
-				if (level.id == 2)
-					level.id = 2;
-				camera.go_to(sprites[character_sprite].get_position().x(), sprites[character_sprite].get_position().y(), camera_init_pos);
+			add_labyrinth_content();
 
-				level_complete = false;
-				character.moving = false;
-			}
+			//center camera on the character
+			camera.go_to(sprites[character_sprite].get_position().x(), sprites[character_sprite].get_position().y(), camera_init_pos);
+
+			level_complete = false;
+			character.moving = false;
 		}
 
 	#pragma endregion
@@ -681,7 +687,7 @@ namespace octet {
 			//show scary face sometimes for suspense
 			int rand_scary_face = rand() % 100;
 			if (rand_scary_face == 0)
-				show_evil_face(3 + 2.f*level.initial_steps / level.steps);
+				show_evil_face(10 + 2.f*level.initial_steps / level.steps);
 
 			for (int i = 0; i < content_cells.size(); i++)
 			{
@@ -714,12 +720,9 @@ namespace octet {
 						steps_alteration = content_cells[i].loot;
 						steps_alteration_duration = 100;
 						content_cells[i].loot = none;
-						show_evil_face(30);
+						show_evil_face(60,true);
 						break;
 					case exit:
-						//	//cameraToWorld.translate(camera_path_remaining.x(), camera_path_remaining.y(), 0);
-						//	//camera_position += camera_path_remaining;
-						sprites[board_sprite].is_enabled() = false;
 						level_complete = true;
 						sprites[level_complete_sprite].is_enabled() = true;
 						break;
@@ -754,20 +757,12 @@ namespace octet {
 			camera.translate(vec3(0, 0, camera_fin_pos + current_pos*(camera_init_pos - camera_fin_pos) - camera.get_z()));
 		}
 
-		void show_evil_face(int duration)
+		void show_evil_face(int duration, bool mandatory = false)
 		{
-			if (previous_scary_face_time_interval > 5000)
+			if (previous_scary_face_time_interval > 1000 || mandatory)
 			{
 				previous_scary_face_time_interval = 0;
-				if (scary_image_sprite == -1)
-				{
-					GLint evil_face = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/evil ghost.gif");
-					scary_image_sprite = current_sprite;
-					sprites[current_sprite++].init(evil_face, 0, 0, 1.8f, 1.8f);
-					sprites[scary_image_sprite].static_position = true;
-				}
-				else
-					sprites[scary_image_sprite].is_enabled() = true;
+				sprites[scary_image_sprite].is_enabled() = true;
 				scary_face_timeout = duration;
 			}
 		}
@@ -922,7 +917,7 @@ namespace octet {
 					sprites[i].render(texture_shader_, camera.get_camera());
 			}
 			
-			if (!game_over && scary_face_timeout == 0)
+			if (!game_over && !level_complete)
 			{
 				char steps[32];
 				sprintf(steps, "Steps:%d", level.steps);
@@ -962,36 +957,33 @@ namespace octet {
 
 			if (game_over)
 				return;
+			//if the steps = 0 -> game over
 			else if (level.steps == 0)
 			{
-				int old_x = sprites[game_over_sprite].get_position().x(),
-					old_y = sprites[game_over_sprite].get_position().y();
-
-				sprites[board_sprite].is_enabled() = false;
 				sprites[game_over_sprite].is_enabled() = true;
 				game_over = true;
 			}
+			//if the level completed
 			else if (level_complete)
 			{
 				if (is_key_down(key_enter))
 					generate_new_level();
 			}
+			//if the image of a ghost is shown
 			else
 			{
+				//test only
 				if (is_key_down(key_enter))
-				{
 					generate_new_level();
-				}
-
 
 				previous_scary_face_time_interval++;
 
 				move_character();
 
+				animate_pickups();
+
 				animate_sprites();
 
-				animate_pickups();
-				
 				//XY movement
 				if (camera.is_moving())
 				{
