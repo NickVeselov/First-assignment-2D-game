@@ -45,9 +45,6 @@ namespace octet {
 
 		void set_translation(float dx, float dy, float dz)
 		{
-			x += dx;
-			y += dy;
-			z += dz;
 			if (dx != 0 || dy != 0 || dz != 0)
 			{
 				moving = true;
@@ -72,7 +69,7 @@ namespace octet {
 		{
 			if (path_remaining.x() != 0 || path_remaining.y() != 0 || path_remaining.z() != 0)
 			{
-				int a_dx = abs(path_remaining.x()),
+				float a_dx = abs(path_remaining.x()),
 					a_dy = abs(path_remaining.y());
 
 				vec3 adjusted_speed = vec3(0, 0, 0);
@@ -100,6 +97,8 @@ namespace octet {
 					cells_to_go.y() = pow(2.f, cells_to_go.y() - 1);
 
 				adjusted_speed += basic_speed*cells_to_go;
+
+				//if (adju)
 
 				if (a_dx < adjusted_speed.x())
 					adjusted_speed.x() = a_dx;
@@ -130,14 +129,11 @@ namespace octet {
 			return z;
 		}
 
-		void stop_movement()
-		{
-			path_remaining = vec3(0, 0, 0);
-		}
-
 		void go_to(float x1, float y1, float z1)
 		{
-			translate(vec3(x1 - x, y1 - y, z1 - z));
+			while (moving)
+				move();
+			translate(vec3(x1 - x , y1 - y, z1 - z));
 		}
 	};
 
@@ -554,18 +550,15 @@ namespace octet {
 				lab.construct_labyrinth();
 				draw_walls();
 
-				if (level.id == 2)
-					level.id = 2;
-				vec2 pos = sprites[character_sprite].get_position();
 				sprites[character_sprite].move_to_the_cell(0, lab.entrance_index, lab.cell_size);
-				pos = sprites[character_sprite].get_position();
 
 				set_variables();
 
 				add_labyrinth_content();
 
 				//center camera on the character
-				camera.stop_movement();
+				if (level.id == 2)
+					level.id = 2;
 				camera.go_to(sprites[character_sprite].get_position().x(), sprites[character_sprite].get_position().y(), camera_init_pos);
 
 				level_complete = false;
