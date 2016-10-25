@@ -340,6 +340,11 @@ namespace octet {
 		int level_complete_sprite;
 		int scary_image_sprite;
 		int static_sprites_number;
+		int energy_bar_sprite;
+
+		GLuint Void;
+		vec2 energy_bar_width;
+		vec2 energy_bar_position;
 
 		// game state
 		bool game_over;
@@ -396,11 +401,28 @@ namespace octet {
 			sprites[game_over_sprite].is_enabled() = false;
 			sprites[game_over_sprite].static_position = true;
 
-			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#800080");
+			//GLuint Energy = resource_dict::get_texture_handle(GL_RGBA, "#6cabbd");
+			////ene = current_sprite;
+			//sprites[current_sprite].init(Energy, -0.5f, -0.8f, 0.55f, 0.10f);
+			//sprites[current_sprite].static_position = true;
+			//sprites[current_sprite++].is_enabled() = true;
+
+			GLuint Energy = resource_dict::get_texture_handle(GL_RGBA, "#12115e");
+			Void = resource_dict::get_texture_handle(GL_RGBA, "#000000");
+			energy_bar_position = vec2(-0.1f, -0.8f);
+			energy_bar_width = vec2(0.6f, 0.15f);
+
+			energy_bar_sprite = current_sprite;
+			sprites[current_sprite++].init(Void, energy_bar_position.x(), energy_bar_position.y(), 0, 0);
+			sprites[energy_bar_sprite].static_position = true;
+
+			sprites[current_sprite].init(Energy, energy_bar_position.x(), energy_bar_position.y(), energy_bar_width.x(), energy_bar_width.y());
+			sprites[current_sprite++].static_position = true;
+			
+			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#C0C0C0");
 			board_sprite = current_sprite;
 			sprites[current_sprite++].init(Board, 0, -0.8f, 1.8f, 0.2f);
 			sprites[board_sprite].static_position = true;
-			sprites[board_sprite].is_enabled() = true;
 
 			GLint evil_face = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/evil ghost.gif");
 			scary_image_sprite = current_sprite;
@@ -638,6 +660,8 @@ namespace octet {
 					character.moving = true;
 					//check for looting/escaping
 					check_collision();
+
+					update_energy_bar();
 				}
 			}
 		}
@@ -823,6 +847,15 @@ namespace octet {
 			}
 		}
 
+		void update_energy_bar()
+		{
+			int percentage = 100 - level.steps * 100 / level.initial_steps;
+			vec2 bar_width = vec2(percentage*energy_bar_width.x()/100.f, energy_bar_width.y())*0.95f;
+			float location_x = (energy_bar_position.x() + energy_bar_width.x() / 2.f) - bar_width.x()/ 2.f;
+			sprites[energy_bar_sprite].init(Void, location_x, energy_bar_position.y(), bar_width.x(), bar_width.y());
+			//sprites[energy_bar_sprite].init(Void, energy_bar_position.x(), energy_bar_position.y(), 0.5f, 0.5f);
+			sprites[energy_bar_sprite].static_position = true;
+		}
 	#pragma endregion
 
 	//"invaders" useful functions
@@ -919,13 +952,14 @@ namespace octet {
 			
 			if (!game_over && !level_complete)
 			{
-				char steps[32];
-				sprintf(steps, "Steps:%d", level.steps);
+				int percent = level.steps * 100 / level.initial_steps;
+				char steps[62];
+				sprintf(steps, "Energy:        %d%%", percent);
 
 				//draw_text(texture_shader_, camera_position.x() - 0.55f*camera_initial_distance,
 				//	camera_position.y() - 1.15f*camera_initial_distance,
 				//	1.f / 16, steps);
-				draw_text(texture_shader_, -0.32f, -1.21f, 1.f / 512, steps);
+				draw_text(texture_shader_, -0.35f, -1.21f, 1.f / 512, steps);
 				if (steps_alteration_duration != 0)
 				{
 					char bonus_message[40];
