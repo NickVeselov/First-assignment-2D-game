@@ -495,7 +495,7 @@ namespace octet {
 			character.x = lab.entrance_index;
 			character.y = 0;
 
-			level.reserve = level.steps;
+			level.reserve += level.steps;
 			int steps = 0.5f*lab.path_length + rand() % lab.path_length;
 			level.steps = level.initial_steps = steps;
 
@@ -894,6 +894,8 @@ namespace octet {
 			level.reserve -= level.steps;
 			if (level.reserve <= 0)
 				sprites[reserve_bar_sprite].is_enabled() = false;
+
+			handle_looting_event();
 		}
 
 		void draw_text_lines()
@@ -907,20 +909,20 @@ namespace octet {
 
 				//Energy
 				int percent = level.steps * 100 / level.initial_steps;
-				char steps[32];
-				sprintf(steps, "Energy:      %d%%", percent);
-				draw_text(texture_shader_, left_line, top_level, size, steps);
+				char energy_text[32];
+				sprintf(energy_text, "Energy:      %d%%", percent);
+				draw_text(texture_shader_, left_line, top_level, size, energy_text);
 				//Reserve
 				if (level.reserve > 0)
 				{
 					int percent = level.reserve * 100 / level.initial_steps;
-					char text[32];
-					sprintf(steps, "Reserve:      %d%%", percent);
-					draw_text(texture_shader_, right_line, top_level, size, steps);
+					char reserve_text[32];
+					sprintf(reserve_text, "Reserve:      %d%%", percent);
+					draw_text(texture_shader_, right_line, top_level, size, reserve_text);
 				}
 
 
-				if (steps_alteration_duration = 0)
+				if (steps_alteration_duration > 0)
 				{
 					char bonus_message[40];
 					steps_alteration_duration--;
@@ -1064,7 +1066,7 @@ namespace octet {
 			//if the steps = 0 -> game over
 			else if (level.steps <= 0)
 			{
-				if (level.reserve < 0)
+				if (level.reserve <= 0)
 				{
 					sprites[game_over_sprite].is_enabled() = true;
 					game_over = true;

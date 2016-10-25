@@ -26,7 +26,6 @@ d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\l
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(733): warning C4018: '<': signed/unsigned mismatch
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(818): warning C4018: '<': signed/unsigned mismatch
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(852): warning C4018: '<': signed/unsigned mismatch
-d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth_app.h(917): warning C4101: 'text': unreferenced local variable
 d:\game development\study\projects\first-assignment-2d-game\octet\src\examples\labyrinth escape\labyrinth.h(297): warning C4715: 'octet::Labyrinth::find_unvisited_cell': not all control paths return a value
   example_invaderers.vcxproj -> D:\Game development\Study\Projects\First-assignment-2D-game\octet\src\examples\labyrinth escape\Debug\labyrinth_debug.exe
   example_invaderers.vcxproj -> D:\Game development\Study\Projects\First-assignment-2D-game\octet\src\examples\labyrinth escape\Debug\labyrinth_debug.pdb (Full PDB)
