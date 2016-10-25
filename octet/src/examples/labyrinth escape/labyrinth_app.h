@@ -59,9 +59,9 @@ namespace octet {
 		{ 
 			//	1/8 screen per 1 sec 0.2 - 0.6; 0.3; 0.75
 			float current = (z - min_distance) / (initial_position.z() - min_distance), //4 - 14; 14/10 = 1.4;
-				modifier = 18 * (current - 0.1);
+				modifier = 10 * (current - 0.1);
 
-			current_speed.x() = current_speed.y() = (2.f*z) / (modifier * 30);
+			current_speed.x() = current_speed.y() = std::min((2.f*z) / (modifier * 30), z/4);
 		}
 	public:		
 
@@ -341,15 +341,17 @@ namespace octet {
 		int scary_image_sprite;
 		int static_sprites_number;
 		int energy_bar_sprite;
+		int reserve_bar_sprite;
 
 		GLuint Void;
-		vec2 energy_bar_width;
+		GLuint Reserve;
+		vec2 energy_bar_size;
 		vec2 energy_bar_position;
 
 		// game state
 		bool game_over;
 		bool level_complete;
-
+		bool character_killed;
 		// random number generator
 		class random randomizer;
 
@@ -382,12 +384,13 @@ namespace octet {
 		
 		float border_width = 1;
 		float wall_width = 0.4f;
-		float camera_init_pos = lab.absolute_size*0.4f;
-		float camera_fin_pos = lab.absolute_size*0.2f;
+		float camera_init_pos = lab.absolute_size*0.6f;
+		float camera_fin_pos = lab.absolute_size*0.3f;
 
 		void game_initialization()
 		{
 			game_over = false;
+			character_killed = false;
 			current_sprite = 0;
 
 			GLuint LevelComplete = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/level complete.gif");
@@ -408,20 +411,25 @@ namespace octet {
 			//sprites[current_sprite++].is_enabled() = true;
 
 			GLuint Energy = resource_dict::get_texture_handle(GL_RGBA, "#12115e");
+			Reserve = resource_dict::get_texture_handle(GL_RGBA, "#FF0000");
 			Void = resource_dict::get_texture_handle(GL_RGBA, "#000000");
-			energy_bar_position = vec2(-0.1f, -0.8f);
-			energy_bar_width = vec2(0.6f, 0.15f);
+			energy_bar_position = vec2(-0.26f, -0.6f);
+			energy_bar_size = vec2(0.4f, 0.13f);
 
 			energy_bar_sprite = current_sprite;
 			sprites[current_sprite++].init(Void, energy_bar_position.x(), energy_bar_position.y(), 0, 0);
 			sprites[energy_bar_sprite].static_position = true;
 
-			sprites[current_sprite].init(Energy, energy_bar_position.x(), energy_bar_position.y(), energy_bar_width.x(), energy_bar_width.y());
+			sprites[current_sprite].init(Energy, energy_bar_position.x(), energy_bar_position.y(), energy_bar_size.x(), energy_bar_size.y());
 			sprites[current_sprite++].static_position = true;
 			
-			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#C0C0C0");
+			reserve_bar_sprite = current_sprite;
+			sprites[current_sprite++].init(Reserve, energy_bar_position.x(), energy_bar_position.y(), energy_bar_size.x(), energy_bar_size.y());
+			sprites[energy_bar_sprite].static_position = true;
+			
+			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#808080");
 			board_sprite = current_sprite;
-			sprites[current_sprite++].init(Board, 0, -0.8f, 1.8f, 0.2f);
+			sprites[current_sprite++].init(Board, 0, -0.7f, 1.8f, 0.4f);
 			sprites[board_sprite].static_position = true;
 
 			GLint evil_face = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/evil ghost.gif");
@@ -487,15 +495,17 @@ namespace octet {
 			character.x = lab.entrance_index;
 			character.y = 0;
 
-			level.initial_steps = level.steps += 0.7f*lab.path_length;
-			level.initial_steps = level.steps += rand() % level.steps / 2.f;
+			level.reserve = level.steps;
+			int steps = 0.5f*lab.path_length + rand() % lab.path_length;
+			level.steps = level.initial_steps = steps;
+
 
 			character.fading_point = level.steps / 10.f;
 			sprites[character_sprite].transparency = 1;
 
 			steps_alteration = none;
 			steps_alteration_duration = 0;
-			bonus_value = level.initial_steps / 2;
+			bonus_value = 25;
 			scary_face_timeout = 0;
 			previous_scary_face_time_interval = 10000;
 		}
@@ -522,20 +532,24 @@ namespace octet {
 
 		void create_pickups(int exits_number, int stop_index)
 		{
+			int double_bonuses_number = 0;
 			for (int i = content_cells.size() - exits_number - 1; i >= stop_index; i--)
 			{
 				GLuint soul_loot;
-				int type = rand() % 2;
 				content_cells[i].bouncing = true;
-				content_cells[i].bounce_max_value = lab.cell_size / 20;
-				int r = rand() % 2 * content_cells[i].bounce_max_value;
-				content_cells[i].current_bounce_position = -content_cells[i].current_bounce_position + r;
+				content_cells[i].bounce_max_value = lab.cell_size / 20.f;
+				float r = rand() % 2 * content_cells[i].bounce_max_value;
+				content_cells[i].current_bounce_position = -content_cells[i].bounce_max_value + r;
 				r = rand() % 2;
 				if (r == 0)
 					content_cells[i].direction = true;
 				else
 					content_cells[i].direction = false;
 
+				int type = rand() % 2;
+				if (double_bonuses_number == 1)
+					type = 0;
+				
 				switch (type)
 				{
 					//blue (add)
@@ -547,6 +561,7 @@ namespace octet {
 				case 1:
 					soul_loot = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/violet soul.gif");
 					content_cells[i].loot = double_value;
+					double_bonuses_number++;
 					break;
 				}
 				content_cells[i].sprite_index = current_sprite;
@@ -655,6 +670,8 @@ namespace octet {
 				if (character.x != x || character.y != y)
 				{
 					character.distance_left_to_move = lab.cell_size;
+					if (level.steps < level.initial_steps / 10)
+						level.steps = level.steps;
 					camera.set_translation((character.x - x)*lab.cell_size, (character.y - y)*lab.cell_size, 0);
 					level.steps--;
 					character.moving = true;
@@ -720,7 +737,7 @@ namespace octet {
 					switch (content_cells[i].loot)
 					{
 					case bonus:
-						level.steps += bonus_value;
+						level.steps += level.initial_steps*bonus_value/100;
 						handle_looting_event();
 						sprites[content_cells[i].sprite_index].is_enabled() = false;
 						steps_alteration = content_cells[i].loot;
@@ -736,9 +753,14 @@ namespace octet {
 						content_cells[i].loot = none;
 						break;
 					case fake_exit:
-						level.steps -= bonus_value;
+						level.steps -= level.initial_steps* bonus_value/100;
 						if (level.steps <= 0)
-							game_over = true;
+						{
+							if (level.reserve > 0)
+								use_reserves();
+							else
+								character_killed = true;
+						}
 						handle_looting_event();
 						sprites[content_cells[i].sprite_index].is_enabled() = false;
 						steps_alteration = content_cells[i].loot;
@@ -798,16 +820,17 @@ namespace octet {
 				if (content_cells[i].bouncing)
 				{
 					float current = content_cells[i].current_bounce_position,
-						max_pos = content_cells[i].bounce_max_value;
+						max_pos = content_cells[i].bounce_max_value,
+						speed = max_pos / 20;
 					if (content_cells[i].direction)
 					{
-						content_cells[i].current_bounce_position += max_pos / 10;
-						sprites[content_cells[i].sprite_index].translate(0, +max_pos / 10);
+						content_cells[i].current_bounce_position += speed;
+						sprites[content_cells[i].sprite_index].translate(0, +speed);
 					}
 					else
 					{
-						content_cells[i].current_bounce_position -= max_pos / 10;
-						sprites[content_cells[i].sprite_index].translate(0, -max_pos / 10);
+						content_cells[i].current_bounce_position -= speed;
+						sprites[content_cells[i].sprite_index].translate(0, -speed);
 					}
 
 					//change direction
@@ -850,11 +873,75 @@ namespace octet {
 		void update_energy_bar()
 		{
 			int percentage = 100 - level.steps * 100 / level.initial_steps;
-			vec2 bar_width = vec2(percentage*energy_bar_width.x()/100.f, energy_bar_width.y())*0.95f;
-			float location_x = (energy_bar_position.x() + energy_bar_width.x() / 2.f) - bar_width.x()/ 2.f;
+			if (percentage < 0)
+				percentage = 0;
+			vec2 bar_width = vec2(percentage*energy_bar_size.x()/100.f, energy_bar_size.y())*0.95f;
+			float location_x = (energy_bar_position.x() + energy_bar_size.x() / 2.f) - bar_width.x()/ 2.f;
 			sprites[energy_bar_sprite].init(Void, location_x, energy_bar_position.y(), bar_width.x(), bar_width.y());
-			//sprites[energy_bar_sprite].init(Void, energy_bar_position.x(), energy_bar_position.y(), 0.5f, 0.5f);
 			sprites[energy_bar_sprite].static_position = true;
+
+			if (level.reserve > 0)
+			{
+				sprites[reserve_bar_sprite].init(Reserve, energy_bar_position.x() + energy_bar_size.x() + 0.52f, energy_bar_position.y(), 
+					energy_bar_size.x()*0.8f, energy_bar_size.y());
+				sprites[reserve_bar_sprite].static_position = true;
+			}
+		}
+
+		void use_reserves()
+		{
+			level.steps = std::min(level.initial_steps, level.reserve);
+			level.reserve -= level.steps;
+			if (level.reserve <= 0)
+				sprites[reserve_bar_sprite].is_enabled() = false;
+		}
+
+		void draw_text_lines()
+		{
+			if (!game_over && !level_complete)
+			{
+				float top_level = -0.95f,
+					size = 1.f / 600,
+					left_line = -0.25f,
+					right_line = 0.65f;
+
+				//Energy
+				int percent = level.steps * 100 / level.initial_steps;
+				char steps[32];
+				sprintf(steps, "Energy:      %d%%", percent);
+				draw_text(texture_shader_, left_line, top_level, size, steps);
+				//Reserve
+				if (level.reserve > 0)
+				{
+					int percent = level.reserve * 100 / level.initial_steps;
+					char text[32];
+					sprintf(steps, "Reserve:      %d%%", percent);
+					draw_text(texture_shader_, right_line, top_level, size, steps);
+				}
+
+
+				if (steps_alteration_duration = 0)
+				{
+					char bonus_message[40];
+					steps_alteration_duration--;
+					switch (steps_alteration)
+					{
+					case double_value:
+						sprintf(bonus_message, "Energy has been doubled!");
+						break;
+					case bonus:
+						sprintf(bonus_message, "+%d%% bonus received", bonus_value);
+						break;
+					case fake_exit:
+						sprintf(bonus_message, "It's a trap! -%d energy", bonus_value);
+						break;
+					default:
+						break;
+					}
+					draw_text(texture_shader_, 0, -1.13f, size, bonus_message);
+				}
+			}
+
 		}
 	#pragma endregion
 
@@ -880,9 +967,9 @@ namespace octet {
 				enum { max_quads = 32 };
 				bitmap_font::vertex vertices[max_quads * 4];
 				uint32_t indices[max_quads * 6];
-				aabb bb(vec3(0, 0, 0), vec3(256, 256, 0));
+				aabb bb(vec3(0, 0, 0), vec3(350, 256, 0));
 
-				unsigned num_quads = font.build_mesh(bb, vertices, indices, max_quads, text, 0);
+				unsigned num_quads = font.build_mesh(bb, vertices, indices, max_quads, text,0);
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, font_texture);
 
@@ -950,37 +1037,7 @@ namespace octet {
 					sprites[i].render(texture_shader_, camera.get_camera());
 			}
 			
-			if (!game_over && !level_complete)
-			{
-				int percent = level.steps * 100 / level.initial_steps;
-				char steps[62];
-				sprintf(steps, "Energy:        %d%%", percent);
-
-				//draw_text(texture_shader_, camera_position.x() - 0.55f*camera_initial_distance,
-				//	camera_position.y() - 1.15f*camera_initial_distance,
-				//	1.f / 16, steps);
-				draw_text(texture_shader_, -0.35f, -1.21f, 1.f / 512, steps);
-				if (steps_alteration_duration != 0)
-				{
-					char bonus_message[40];
-					steps_alteration_duration--;
-					switch (steps_alteration)
-					{
-					case double_value:
-						sprintf(bonus_message, "Soul has been doubled!");
-						break;
-					case bonus:
-						sprintf(bonus_message, "+%d bonus received",bonus_value);
-						break;
-					case fake_exit:
-						sprintf(bonus_message, "It's a trap! -%d soul essence",bonus_value);
-						break;
-					default:
-						break;
-					}
-					draw_text(texture_shader_, 0.4f, -1.21f, 1.f / 512, bonus_message);
-				}
-			}
+			draw_text_lines();
 
 			// move the listener with the camera
 			vec4 &cpos = camera.get_camera().w();
@@ -991,17 +1048,38 @@ namespace octet {
 
 			if (game_over)
 				return;
-			//if the steps = 0 -> game over
-			else if (level.steps == 0)
+			else if (character_killed)
 			{
-				sprites[game_over_sprite].is_enabled() = true;
-				game_over = true;
+				if (scary_face_timeout != 0)
+				{
+					scary_face_timeout--;
+					if (scary_face_timeout == 0)
+					{
+						sprites[scary_image_sprite].is_enabled() = false;
+						sprites[game_over_sprite].is_enabled() = true;
+						game_over = true;
+					}
+				}
+			}
+			//if the steps = 0 -> game over
+			else if (level.steps <= 0)
+			{
+				if (level.reserve < 0)
+				{
+					sprites[game_over_sprite].is_enabled() = true;
+					game_over = true;
+				}
+				else
+					use_reserves();
 			}
 			//if the level completed
 			else if (level_complete)
 			{
 				if (is_key_down(key_enter))
+				{
 					generate_new_level();
+					update_energy_bar();
+				}
 			}
 			//if the image of a ghost is shown
 			else

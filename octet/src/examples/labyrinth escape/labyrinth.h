@@ -22,7 +22,7 @@ namespace octet {
 	struct GameLevel {
 		int steps = 0;
 		int initial_steps;
-
+		int reserve = 0;
 		int id = 0;
 	};
 
