@@ -999,7 +999,6 @@ namespace octet {
 			// set up the shader
 			texture_shader_.init();
 
-			//ToDo: the horizontal speed should be relative to camera distance
 			camera.init(0, 0, camera_init_pos, camera_fin_pos,
 				lab.cell_size / 120.f, lab.cell_size / 120.f, (camera_init_pos - camera_fin_pos) / 240.f, lab.cell_size);
 			font_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/big_0.gif");
