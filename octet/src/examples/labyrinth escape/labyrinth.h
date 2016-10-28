@@ -156,8 +156,8 @@ namespace octet {
 		};
 public:
 		enum {
-			absolute_size = 160,
-			cell_size = 16,
+			absolute_size = 140,
+			cell_size = 10,
 
 			cells_number = absolute_size / cell_size,
 			half_size = absolute_size/2,

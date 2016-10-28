@@ -68,6 +68,7 @@ namespace octet { namespace shaders {
       // customize the program with uniforms
       glUniform1i(samplerIndex_, sampler);
 	  glUniform1f(transparencyIndex_, transparency);
+	  //glUni
       glUniformMatrix4fv(modelToProjectionIndex_, 1, GL_FALSE, modelToProjection.get());
     }
   };
