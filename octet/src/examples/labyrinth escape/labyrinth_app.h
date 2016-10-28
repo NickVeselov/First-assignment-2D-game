@@ -12,7 +12,6 @@
 
 namespace octet {
 
-	
 	class sprite {
 		// where is our sprite (overkill for a 2D game!)
 		mat4t modelToWorld;

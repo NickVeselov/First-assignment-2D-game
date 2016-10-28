@@ -283,6 +283,7 @@
     <ClInclude Include="..\..\shaders\shaders.h" />
     <ClInclude Include="..\..\shaders\texture_shader.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="game_level.h" />
     <ClInclude Include="labyrinth.h" />
     <ClInclude Include="labyrinth_app.h" />
   </ItemGroup>
