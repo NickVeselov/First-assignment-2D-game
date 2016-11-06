@@ -20,3 +20,9 @@ The source code files, that were designed for this application are:
  This file, contains enumerations and storage classes for game levels.
  
 Every level is created using the same random-based recursive algorithm. The pickups are put to the furthest tunnels in the labyrinth (deadends). The goal is to get to the exit, which is represented by staircase. However, each level contains 3 staircases, two of which are fake. Fake staircases - are evil ghosts, and sometimes they are blnking (showing their real nature), when you are making a step, and the lower your energy level is - the bigger chance that they would reveal themself for a moment, unable to handle the neverending hunger.
+
+When the character makes a step - he looses energy, and the walls are getting closer, which is shown by zooming in camera.
+
+The pickups can be 2 types : bonus energy, or double energy. The amount of bonus is 25% and it's absolute value is equal to the amount of energy you loose, when you rush into the ghost.
+
+If you have completed the level - then all you remaining energy would be stored for the next level in 'Reserve'. If you are out of energy - then you reserves come along, which is similar to 'lifes' mechanic in adventure games.
