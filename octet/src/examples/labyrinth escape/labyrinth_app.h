@@ -1,5 +1,6 @@
 #include "labyrinth.h"
 #include "camera.h"
+#include "game_level.h"
 
 #pragma once
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,7 +234,7 @@ namespace octet {
 		// sounds
 		ALuint main_music_theme;
 		unsigned cur_source;
-		enum { num_sound_sources = 44 };
+		enum { num_sound_sources = 16 };
 		ALuint sources[num_sound_sources];
 
 		Camera camera;

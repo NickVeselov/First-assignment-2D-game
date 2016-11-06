@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <ctime>
+#include "game_level.h"
 #pragma once
 
 namespace octet {
@@ -118,7 +119,7 @@ namespace octet {
 		};
 public:
 		enum {
-			absolute_size = 140,
+			absolute_size = 120,
 			cell_size = 10,
 
 			cells_number = absolute_size / cell_size,
