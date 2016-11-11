@@ -7,14 +7,20 @@ namespace octet {
 
 	class Cell {
 	public:
+		//cell location in the maze from (0,0) to (lab.size, lab.size)
 		int x;
 		int y;
+		//walls indicators
 		bool left_wall;
 		bool top_wall;
 		bool right_wall;
 		bool bottom_wall;
+
+		//the distance (measured in cells) from the last crossroads [to indicate deadends]
 		int distance;
+		//loot stored in the cell
 		Loot loot = none;
+
 		int sprite_index;
 
 		//blinking (for stairs)
@@ -24,6 +30,7 @@ namespace octet {
 		bool bouncing;
 		float bounce_max_value;
 		float current_bounce_position;
+		//top or bottom
 		bool direction;
 		Cell() 
 		{
@@ -42,15 +49,18 @@ namespace octet {
 			sprite_index = -1;
 			bouncing = false;
 		}
+
 		Cell(int X, int Y)
 		{
 			x = X; y = Y;
 		}
+
 		bool operator<(const Cell &rhs) const { return distance < rhs.distance; }
 	};
 
 	class Labyrinth {
 
+		//stack element
 		struct StackNode
 		{
 			int x;
@@ -63,6 +73,7 @@ namespace octet {
 			}
 		};
 		
+		//stack, that contains lab cells
 		class Stack
 		{
 		private:
@@ -249,9 +260,12 @@ private:
 			//no unvisited neighbours
 			else
 			{
+				//if it was the furthest cell at the moment - save it
 				if (return_path_length == 0)
 					dead_end = labyrinth_stack->get_head();
+				//increment the length of the go back path
 				return_path_length++;
+				//go to the previous cell
 				vec2 previous = labyrinth_stack->pop();
 				if (previous.x() == -1)
 					return previous;
@@ -259,6 +273,7 @@ private:
 			}
 		}
 
+		//check if the cell was visited by the algorithm
 		bool check_cell(int x, int y)
 		{
 			if ((x >= 0) && (x < cells_number) && (y >= 0) && (y < cells_number))

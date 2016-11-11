@@ -213,8 +213,11 @@ namespace octet {
 		int energy_bar_sprite;
 		int reserve_bar_sprite;
 
+		//font textures
 		GLuint Void;
 		GLuint Reserve;
+		
+		// static UI measurements
 		vec2 energy_bar_size;
 		vec2 energy_bar_position;
 
@@ -239,14 +242,20 @@ namespace octet {
 
 		Camera camera;
 
+		//true face of the ghost - to show it sometimes for a second
 		Loot steps_alteration;
 		int steps_alteration_duration;
+		//blinking sprites number
 		int blinking_sprites;
+		//remaining animation time
 		int scary_face_timeout;
+		//time passed since last time the face was shown
 		int previous_scary_face_time_interval;
 
+		//amount of bonus points contained in the pickup
 		int bonus_value;
 
+		//cells array, that contains cells with loot
 		std::vector<Cell> content_cells;
 		
 	//for the game in general
@@ -261,57 +270,61 @@ namespace octet {
 			character_killed = false;
 			current_sprite = 0;
 
+			//create blueprint for level complete screen
 			GLuint LevelComplete = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/level complete.gif");
 			level_complete_sprite = current_sprite;
 			sprites[current_sprite++].init(LevelComplete, 0, 0, 2, 2);
 			sprites[level_complete_sprite].static_position = true;
 
+			//create blueprint for game over screen
 			GLuint GameOver = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/game over.gif");
 			game_over_sprite = current_sprite;
 			sprites[current_sprite++].init(GameOver, 0, 0, 2, 2);
 			sprites[game_over_sprite].is_enabled() = false;
 			sprites[game_over_sprite].static_position = true;
 
-			//GLuint Energy = resource_dict::get_texture_handle(GL_RGBA, "#6cabbd");
-			////ene = current_sprite;
-			//sprites[current_sprite].init(Energy, -0.5f, -0.8f, 0.55f, 0.10f);
-			//sprites[current_sprite].static_position = true;
-			//sprites[current_sprite++].is_enabled() = true;
-
+			//create Energy Bar at the UI panel
 			GLuint Energy = resource_dict::get_texture_handle(GL_RGBA, "#12115e");
 			Reserve = resource_dict::get_texture_handle(GL_RGBA, "#FF0000");
 			Void = resource_dict::get_texture_handle(GL_RGBA, "#000000");
 			energy_bar_position = vec2(-0.26f, -0.6f);
 			energy_bar_size = vec2(0.4f, 0.13f);
 
+			//energy-eater UI bar (void)
 			energy_bar_sprite = current_sprite;
 			sprites[current_sprite++].init(Void, energy_bar_position.x(), energy_bar_position.y(), 0, 0);
 			sprites[energy_bar_sprite].static_position = true;
 
+			//energy bar
 			sprites[current_sprite].init(Energy, energy_bar_position.x(), energy_bar_position.y(), energy_bar_size.x(), energy_bar_size.y());
 			sprites[current_sprite++].static_position = true;
 			
+			//reserve bar
 			reserve_bar_sprite = current_sprite;
 			sprites[current_sprite++].init(Reserve, energy_bar_position.x(), energy_bar_position.y(), energy_bar_size.x(), energy_bar_size.y());
 			sprites[energy_bar_sprite].static_position = true;
 			
+			//the UI panel
 			GLuint Board = resource_dict::get_texture_handle(GL_RGBA, "#808080");
 			board_sprite = current_sprite;
 			sprites[current_sprite++].init(Board, 0, -0.7f, 1.8f, 0.4f);
 			sprites[board_sprite].static_position = true;
 
+			//create blueprint for scary face image
 			GLint evil_face = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/evil ghost.gif");
 			scary_image_sprite = current_sprite;
 			sprites[current_sprite++].init(evil_face, 0, 0, 2.f, 2.f);
 			sprites[scary_image_sprite].static_position = true;
 			sprites[scary_image_sprite].is_enabled() = false;
 			sprites[scary_image_sprite].transparency = 0.5f;
-
+			
+			//character
 			GLuint character_texture = resource_dict::get_texture_handle(GL_RGBA, "assets/labyrinth/character.gif");
 			character_sprite = current_sprite;
 			sprites[current_sprite++].init(character_texture, 0, 0,
 				lab.cell_size - border_width - wall_width, lab.cell_size - border_width - wall_width);
 
+			//same the number of sprites that are static relevant to the current level
 			static_sprites_number = current_sprite;
 
 			character.speed = lab.cell_size / 3.f;
@@ -360,15 +373,19 @@ namespace octet {
 		
 		void set_variables()
 		{
+			//place character at the entrance
 			character.x = lab.entrance_index;
 			character.y = 0;
 
+			//set the energy and reserve bars
 			level.reserve += level.steps;
 			int steps = 0.5f*lab.path_length + rand() % lab.path_length;
 			level.steps = level.initial_steps = steps;
 
-
+			//calculate the fading checkpoint amount
+			//fading checkpoint: with every 10% of energy lost the character becomes less visible
 			character.fading_point = level.steps / 10.f;
+			//set the initial transparency
 			sprites[character_sprite].transparency = 1;
 
 			steps_alteration = none;
@@ -400,22 +417,28 @@ namespace octet {
 
 		void create_pickups(int exits_number, int stop_index)
 		{
-			int double_bonuses_number = 0;
+			//amount of double bonuses already added
+			int double_bonuses_number = 0,
+				double_bonuses_limit = 1;
 			for (int i = content_cells.size() - exits_number - 1; i >= stop_index; i--)
 			{
 				GLuint soul_loot;
+				//set bouncing
 				content_cells[i].bouncing = true;
 				content_cells[i].bounce_max_value = lab.cell_size / 20.f;
+				//randomize bouncing starting position
 				float r = rand() % 2 * content_cells[i].bounce_max_value;
 				content_cells[i].current_bounce_position = -content_cells[i].bounce_max_value + r;
+				//randomize bouncing direction
 				r = rand() % 2;
 				if (r == 0)
 					content_cells[i].direction = true;
 				else
 					content_cells[i].direction = false;
 
+				//if the limit of DB is already in the labyrinth
 				int type = rand() % 2;
-				if (double_bonuses_number == 1)
+				if (double_bonuses_number == double_bonuses_limit)
 					type = 0;
 				
 				switch (type)
@@ -440,6 +463,7 @@ namespace octet {
 
 		void add_labyrinth_content()
 		{
+			//sort by distance from the last crossroads
 			std::sort(content_cells.begin(), content_cells.end());
 
 			int exits_number = 3,

@@ -1,3 +1,5 @@
+**/[Oo]bj/
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
@@ -13,6 +15,7 @@ $RECYCLE.BIN/
 *.msi
 *.msm
 *.msp
+*.bin
 
 # Windows shortcuts
 *.lnk
